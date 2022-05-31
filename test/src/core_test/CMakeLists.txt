@@ -1,0 +1,46 @@
+project(core_test)
+
+include_directories(${HOME_DIR}/include ${HOME_DIR}/test/include)
+
+link_directories(${HOME_DIR}/lib /usr/lib64)
+
+link_libraries(gadget time core graph io logger string random pthread thread stdc++fs system)
+
+add_executable(shuffle_non_temporal_edges src/shuffle_non_temporal_edges.cpp)
+
+add_executable(core_decomposition_test src/core_decomposition_test.cpp)
+
+add_executable(core_insertion_test src/core_insertion_test.cpp)
+add_executable(core_removal_test src/core_removal_test.cpp)
+add_executable(core_insertion_removal_test src/core_insertion_removal_test.cpp)
+
+add_executable(jes_insertion_memory_test src/jes_insertion_memory_test.cpp)
+add_executable(order_insertion_memory_test src/order_insertion_memory_test.cpp)
+add_executable(quasi_insertion_memory_test src/quasi_insertion_memory_test.cpp)
+add_executable(traversal_insertion_memory_test src/traversal_insertion_memory_test.cpp)
+add_executable(parallel_insertion_memory_test src/parallel_insertion_memory_test.cpp)
+
+add_executable(jes_removal_memory_test src/jes_removal_memory_test.cpp)
+add_executable(order_removal_memory_test src/order_removal_memory_test.cpp)
+add_executable(quasi_removal_memory_test src/quasi_removal_memory_test.cpp)
+add_executable(traversal_removal_memory_test src/traversal_removal_memory_test.cpp)
+add_executable(parallel_removal_memory_test src/parallel_removal_memory_test.cpp)
+
+add_executable(jes_insertion_removal_memory_test src/jes_insertion_removal_memory_test.cpp)
+add_executable(order_insertion_removal_memory_test src/order_insertion_removal_memory_test.cpp)
+add_executable(quasi_insertion_removal_memory_test src/quasi_insertion_removal_memory_test.cpp)
+add_executable(traversal_insertion_removal_memory_test src/traversal_insertion_removal_memory_test.cpp)
+add_executable(parallel_insertion_removal_memory_test src/parallel_insertion_removal_memory_test.cpp)
+
+add_executable(core_insertion_compare_test src/core_insertion_compare_test.cpp)
+add_executable(core_removal_compare_test src/core_removal_compare_test.cpp)
+add_executable(core_insertion_removal_compare_test src/core_insertion_removal_compare_test.cpp)
+
+add_executable(core_insertion_size_test src/core_insertion_size_test.cpp)
+add_executable(core_removal_size_test src/core_removal_size_test.cpp)
+add_executable(core_insertion_removal_size_test src/core_insertion_removal_size_test.cpp)
+
+add_executable(core_insertion_thread_test src/core_insertion_thread_test.cpp)
+add_executable(core_removal_thread_test src/core_removal_thread_test.cpp)
+add_executable(core_insertion_removal_thread_test src/core_insertion_removal_thread_test.cpp)
+
