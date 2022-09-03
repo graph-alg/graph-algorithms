@@ -44,3 +44,12 @@ add_executable(core_insertion_thread_test src/core_insertion_thread_test.cpp)
 add_executable(core_removal_thread_test src/core_removal_thread_test.cpp)
 add_executable(core_insertion_removal_thread_test src/core_insertion_removal_thread_test.cpp)
 
+add_executable(core_target_insertion_test src/core_target_insertion_test.cpp)
+add_executable(core_target_removal_test src/core_target_removal_test.cpp)
+add_executable(core_target_insertion_removal_test src/core_target_insertion_removal_test.cpp)
+
+add_executable(core_insertion_performance_test src/core_insertion_performance_test.cpp)
+add_executable(core_removal_performance_test src/core_removal_performance_test.cpp)
+
+add_executable(core_decomposition_count_test src/core_decomposition_count_test.cpp)
+

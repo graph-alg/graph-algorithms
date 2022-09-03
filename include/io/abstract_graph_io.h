@@ -28,10 +28,7 @@ namespace scnu {
 
         static shared_ptr<abstract_graph> load_graph(const shared_ptr<abstract_graph> &other_graph, uint32_t thread_number);
 
-        static void output_core_number(const string &path, const string &file_name,
-                                       const shared_ptr<unordered_map<uint32_t , uint32_t>> &vertex_core_map);
-
-        static void output_csv_file(const string &input_path, const string &output_path,uint32_t thread_number);
+        static void store_graph(const string &input_path, const string &output_path, uint32_t thread_number);
 
 
 

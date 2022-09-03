@@ -13,6 +13,7 @@
 #include "graph/abstract_graph.h"
 #include "graph/abstract_bipartite_graph.h"
 #include "graph/temporal_graph.h"
+#include "graph/weighted_graph.h"
 #include "string/string_algorithm.h"
 #include "thread/thread_pool.h"
 
@@ -25,6 +26,7 @@ using std::ofstream;
 using std::pair;
 using std::shared_ptr;
 using std::vector;
+using std::multimap;
 using std::multiset;
 using std::unordered_map;
 
@@ -38,3 +40,5 @@ using std::make_shared;
 using std::make_pair;
 using std::swap;
 using std::sort;
+
+using scnu::weighted_graph;

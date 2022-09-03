@@ -22,8 +22,8 @@ namespace scnu
         explicit random_generator(const shared_ptr<random_device>& other_random_device);
 
         template<typename engine_type>
-        explicit random_generator(const shared_ptr<engine_type>& other_engine):
-        default_engine(other_engine)
+        explicit random_generator(const shared_ptr<random_device>& other_random_device, const shared_ptr<engine_type>& other_engine):
+                default_random_device(other_random_device),default_engine(other_engine)
         {
 
         }

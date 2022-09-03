@@ -3,26 +3,22 @@
 
 namespace scnu
 {
-    /**
-     * @details construct a new edge with timestamp = 0
-     * @remarks default case constructs an abstract edge
-     * @param other_source_vertex_id
-     * @param other_destination_vertex_id
-     */
     temporal_edge::temporal_edge(uint32_t other_source_vertex_id, uint32_t other_destination_vertex_id) :
-            temporal_edge(other_source_vertex_id, other_destination_vertex_id,0){
+            temporal_edge(other_source_vertex_id, other_destination_vertex_id,0,0){
 
     }
 
-    /**
-     * @details construct a new edge with the given timestamp
-     * @param other_source_vertex_id
-     * @param other_destination_vertex_id
-     * @param other_timestamp
-     */
     temporal_edge::temporal_edge(uint32_t other_source_vertex_id, uint32_t other_destination_vertex_id,
+                                 double other_weight) :
+            temporal_edge(other_source_vertex_id, other_destination_vertex_id, other_weight, 0) {
+
+    }
+
+
+    temporal_edge::temporal_edge(uint32_t other_source_vertex_id, uint32_t other_destination_vertex_id,
+                                 double other_weight,
                                  uint32_t other_timestamp) :
-            abstract_edge(other_source_vertex_id, other_destination_vertex_id),timestamp(other_timestamp) {
+            weighted_edge(other_source_vertex_id, other_destination_vertex_id, other_weight),timestamp(other_timestamp){
 
     }
 
@@ -38,27 +34,7 @@ namespace scnu
      * @details update the timestamp of this edge
      * @param timestamp
      */
-    void temporal_edge::update_timestamp(uint32_t other_timestamp) {
+    void temporal_edge::set_timestamp(uint32_t other_timestamp) {
         timestamp = other_timestamp;
-    }
-
-    /**
-     * @details overload operator < to implement compare between two edges
-     * @param other_edge
-     * @return
-     */
-    bool temporal_edge::operator<(const shared_ptr<temporal_edge> &other_edge) const {
-        return timestamp < other_edge->timestamp;
-    }
-
-    /**
-     * @details overload operator == to remove repeated edges
-     * @param other_edge
-     * @return
-     */
-    bool temporal_edge::operator==(const shared_ptr<temporal_edge> &other_edge) const {
-        return get_source_vertex_id() == other_edge->get_source_vertex_id()
-               && get_destination_vertex_id() == other_edge->get_destination_vertex_id()
-        && timestamp == other_edge->timestamp;
     }
 }

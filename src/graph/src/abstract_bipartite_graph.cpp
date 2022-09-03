@@ -91,6 +91,33 @@ namespace scnu {
         return left_vertex_map;
     }
 
+    double abstract_bipartite_graph::get_average_left_vertex_degree(){
+        double degree = 0;
+        for(const auto &[l,l_vertex]:*left_vertex_map){
+            degree += l_vertex->get_degree();
+        }
+        return degree/left_vertex_map->size();
+    }
+
+    double abstract_bipartite_graph::get_average_right_vertex_degree(){
+        double degree = 0;
+        for(const auto &[r,r_vertex]:*right_vertex_map){
+            degree += r_vertex->get_degree();
+        }
+        return degree/right_vertex_map->size();
+    }
+
+    double abstract_bipartite_graph::get_average_vertex_degree(){
+        double degree = 0;
+        for(const auto &[l,l_vertex]:*left_vertex_map) {
+            degree += l_vertex->get_degree();
+        }
+        for(const auto &[r,r_vertex]:*right_vertex_map){
+            degree += r_vertex->get_degree();
+        }
+        return degree / (left_vertex_map->size() + right_vertex_map->size());
+    }
+
     /**
      * @details get the maximal degree of left vertices
      * @return

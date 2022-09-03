@@ -7,8 +7,7 @@ int main(int argc, char **argv){
     }
     std::string input_path(argv[1]);
     std::string output_path(argv[2]);
-
     auto thread_number = std::stoul(argv[3]);
-    temporal_graph_io::output_csv_file(input_path, output_path,thread_number);
+    temporal_graph_io::store_graph(input_path, output_path, thread_number);
     return 0;
 }

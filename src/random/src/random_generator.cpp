@@ -16,7 +16,7 @@ namespace scnu
     }
 
     random_generator::random_generator(const shared_ptr<random_device>& other_random_device)
-    :default_random_device(other_random_device)
+    :default_random_device(other_random_device),default_engine(get_default_engine(default_random_device))
     {
 
     }

@@ -34,15 +34,18 @@ namespace scnu {
         int destination_vertex_id;
     };
 
-    struct abstract_edge_compare{
-        bool operator()(const shared_ptr<abstract_edge>& e1, const shared_ptr<abstract_edge>& e2) const{
-            if (e1->get_source_vertex_id() < e2->get_source_vertex_id()) {
-                return true;
-            } else if (e1->get_source_vertex_id() > e2->get_source_vertex_id()) {
-                return false;
-            } else {
-                return e1->get_destination_vertex_id() < e2->get_destination_vertex_id();
-            }
+    struct hash_abstract_edge {
+        size_t operator()(const shared_ptr<abstract_edge> &e) const {
+            stringstream input_stream;
+            input_stream<<e->get_source_vertex_id()<< "," <<e->get_destination_vertex_id();
+            return hash<std::string>()(input_stream.str());
+        }
+    };
+
+    struct equal_abstract_edge {
+        bool operator()(const shared_ptr<abstract_edge> &e1, const shared_ptr<abstract_edge> &e2) const {
+            return e1->get_source_vertex_id() == e2->get_source_vertex_id()
+                   && e1->get_destination_vertex_id() == e2->get_destination_vertex_id();
         }
     };
 }

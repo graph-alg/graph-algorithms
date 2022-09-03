@@ -187,7 +187,7 @@ namespace scnu {
 //
 //        auto vertex_degree_map = make_shared<unordered_map<uint32_t,uint32_t>>();
 //        for(auto [v,v_vertex]:*G->get_vertex_map()){
-//            vertex_degree_map->insert({v, v_vertex->get_degree()});
+//            vertex_degree_map->insert({v, v_vertex->get_neighbor_size()});
 //        }
 //
 //        auto vertex_set = make_shared<unordered_set<uint32_t>>();

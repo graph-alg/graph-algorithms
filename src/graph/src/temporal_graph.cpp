@@ -3,7 +3,6 @@
 
 
 namespace scnu{
-
     temporal_graph::temporal_graph() {
         vertex_map = make_shared<unordered_map<uint32_t,shared_ptr<temporal_vertex>>>();
     }
@@ -19,6 +18,10 @@ namespace scnu{
     }
 
     temporal_graph::~temporal_graph() = default;
+
+    bool temporal_graph::empty(){
+        return vertex_map->empty();
+    }
 
     bool temporal_graph::exist_edge(const shared_ptr<temporal_edge>& edge) {
         auto source_vertex = get_vertex(edge->get_source_vertex_id());
@@ -50,6 +53,18 @@ namespace scnu{
         return edge_size / 2;
     }
 
+    double temporal_graph::get_average_edge_size(){
+        double edge_size = 0;
+        uint32_t vertex_pair = 0;
+        for (const auto&[u,u_vertex]:*vertex_map) {
+            for (const auto& [v, edge_set]:*u_vertex->get_neighbor_map()) {
+                vertex_pair ++;
+                edge_size += edge_set->size();
+            }
+        }
+        return edge_size / vertex_pair;
+    }
+
     uint32_t temporal_graph::get_maximal_neighbor_vertex_size(){
         uint32_t max_number = 0;
         for (const auto&[v,v_vertex]:*vertex_map) {
@@ -57,6 +72,14 @@ namespace scnu{
                 max_number = v_vertex->get_neighbor_map()->size();
         }
         return max_number;
+    }
+
+    double temporal_graph::get_average_neighbor_vertex_size(){
+        double max_number = 0;
+        for (const auto&[v,v_vertex]:*vertex_map) {
+            max_number += v_vertex->get_neighbor_map()->size();
+        }
+        return max_number/vertex_map->size();
     }
 
     uint32_t temporal_graph::get_maximal_parallel_edge_size(){
@@ -155,5 +178,4 @@ namespace scnu{
         auto destination_vertex = get_vertex(destination_vertex_id);
         destination_vertex->remove_neighbor_vertex(source_vertex_id);
     }
-
 }

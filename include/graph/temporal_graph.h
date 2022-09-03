@@ -21,6 +21,8 @@ namespace scnu{
 
         ~temporal_graph();
 
+        bool empty();
+
         bool exist_edge(const shared_ptr<temporal_edge>& edge);
 
         bool exist_edge(uint32_t source_vertex_id, uint32_t destination_vertex_id);
@@ -29,7 +31,11 @@ namespace scnu{
 
         uint32_t get_edge_size();
 
+        double get_average_edge_size();
+
         uint32_t get_maximal_neighbor_vertex_size();
+
+        double get_average_neighbor_vertex_size();
 
         uint32_t get_maximal_parallel_edge_size();
 

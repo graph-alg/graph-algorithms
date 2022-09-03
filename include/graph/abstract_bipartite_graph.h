@@ -36,9 +36,17 @@ namespace scnu {
 
         shared_ptr<unordered_map<uint32_t, shared_ptr<abstract_left_vertex>>> get_left_vertex_map();
 
+        double get_average_left_vertex_degree();
+
+        double get_average_right_vertex_degree();
+
+        double get_average_vertex_degree();
+
         uint32_t get_maximal_left_vertex_degree();
 
         uint32_t get_maximal_right_vertex_degree();
+
+
 
         uint32_t get_edge_number();
 

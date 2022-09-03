@@ -2,8 +2,8 @@
 * @copyright  : Boost Software License
 * @file       : extend_list.h
 * @brief      : A bi-direct node for storing the corresponding pair
-* @version    : 1.1
-* @date       : 2020/10/13
+* @version    : 1.2
+* @date       : 2022/06/20
 ******************************************************************************************************************/
 
 #pragma once
@@ -109,7 +109,7 @@ namespace scnu
          */
         iterator end()
         {
-            return forward_iterator(nullptr);
+            return forward_iterator(shared_ptr<extend_node<key_type, value_type>>());
         }
 
         /**
@@ -128,11 +128,7 @@ namespace scnu
          */
         shared_ptr<extend_node<key_type,value_type>> find(value_type value)
         {
-            if(node_map->count(value))
-            {
-                return node_map->at(value);
-            }
-            return nullptr;
+            return node_map->count(value) ? node_map->at(value):shared_ptr<extend_node<key_type, value_type>>();
         }
 
         /**
@@ -142,7 +138,7 @@ namespace scnu
          */
         std::optional<key_type> find_key(value_type value)
         {
-            if(find(value))
+            if(node_map->count(value))
             {
                 return node_map->at(value)->get_key();
             }

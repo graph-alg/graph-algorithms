@@ -1,0 +1,15 @@
+==367773== Callgrind, a call-graph generating cache profiler
+==367773== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==367773== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==367773== Command: ./core_removal_performance_test /home/cs316/wbai/unipartite_graph/small_data/non_temporal_graph/ lasagne-yahoo 14
+==367773== Parent PID: 268677
+==367773== 
+==367773== For interactive control, run 'callgrind_control -h'.
+==367773== brk segment overflow in thread #1: can't grow to 0x4833000
+==367773== (see section Limitations in user manual)
+==367773== NOTE: further instances of this message will not be shown
+==367773== 
+==367773== Events    : Ir
+==367773== Collected : 123568349310
+==367773== 
+==367773== I   refs:      123,568,349,310

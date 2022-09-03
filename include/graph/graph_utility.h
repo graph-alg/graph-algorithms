@@ -8,6 +8,7 @@
 
 #pragma once
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <list>
 #include <map>
@@ -70,9 +71,7 @@ struct equal_pair {
  */
 struct hash_pair {
     size_t operator()(const std::pair<uint64_t , uint64_t> &p) const {
-        stringstream input_stream;
-        input_stream<<p.first<< "," <<p.second;
-        return hash<std::string>()(input_stream.str());
+        return hash<uint64_t>()( (p.first << 2) - p.first + p.second);
     }
 };
 

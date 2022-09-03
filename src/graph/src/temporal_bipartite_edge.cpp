@@ -10,19 +10,18 @@ namespace scnu
      * @param other_right_vertex_id
      */
     temporal_bipartite_edge::temporal_bipartite_edge(uint32_t other_left_vertex_id, uint32_t other_right_vertex_id) :
-            temporal_bipartite_edge(other_left_vertex_id, other_right_vertex_id, 0){
+            temporal_bipartite_edge(other_left_vertex_id, other_right_vertex_id, 0, 0){
 
     }
 
-    /**
-     * @details construct a new edge with the given timestamp
-     * @param other_left_vertex_id
-     * @param other_right_vertex_id
-     * @param other_timestamp
-     */
-    temporal_bipartite_edge::temporal_bipartite_edge(uint32_t other_left_vertex_id, uint32_t other_right_vertex_id,
-                                 uint32_t other_timestamp) :
-            abstract_bipartite_edge(other_left_vertex_id, other_right_vertex_id), timestamp(other_timestamp) {
+    temporal_bipartite_edge::temporal_bipartite_edge(uint32_t other_left_vertex_id, uint32_t other_right_vertex_id, double other_weight) :
+            temporal_bipartite_edge(other_left_vertex_id, other_right_vertex_id, other_weight, 0){
+
+    }
+
+    temporal_bipartite_edge::temporal_bipartite_edge(uint32_t other_left_vertex_id, uint32_t other_right_vertex_id,double other_weight,
+                                                     uint32_t other_timestamp) :
+            weighted_bipartite_edge(other_left_vertex_id, other_right_vertex_id, other_weight), timestamp(other_timestamp) {
 
     }
 

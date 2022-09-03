@@ -1,7 +1,7 @@
 /******************************************************************************************************************
 * @copyright  : Boost Software License
 * @file       : core_test.h
-* @brief      : A common head file for core maintenanc
+* @brief      : A common head file for core maintenance
 * @version    : 1.0
 * @date       : 2021/01/06
 ******************************************************************************************************************/

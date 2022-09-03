@@ -15,7 +15,6 @@ namespace scnu{
         template<typename key_type,typename value_type, typename source_container_type>
         static shared_ptr<map<key_type,value_type>> to_map(const source_container_type& source_container){
             auto destination_container = make_shared<map<key_type,value_type>>();
-            destination_container->reserve(source_container->size());
             copy(source_container->begin(),source_container->end(),
                  inserter(*destination_container, destination_container->end()));
             return destination_container;
@@ -31,7 +30,6 @@ namespace scnu{
         template<typename value_type, typename source_container_type>
         static shared_ptr<set<value_type>> to_set(source_container_type& source_container){
             auto destination_container = make_shared<set<value_type>>();
-            destination_container->reserve(source_container->size());
             copy(source_container->begin(),source_container->end(),
                  inserter(*destination_container,destination_container->end()));
             return destination_container;

@@ -28,15 +28,18 @@ namespace scnu {
         uint32_t right_vertex_id;
     };
 
-    struct abstract_bipartite_edge_compare{
-        bool operator()(const shared_ptr<abstract_bipartite_edge>& e1, const shared_ptr<abstract_bipartite_edge>& e2) const{
-            if(e1->get_left_vertex_id() < e2->get_left_vertex_id()){
-                return true;
-            }else if(e1->get_left_vertex_id() == e2->get_left_vertex_id())
-            {
-                return e1->get_right_vertex_id() < e2->get_right_vertex_id();
-            }
-            return false;
+    struct hash_abstract_bipartite_edge {
+        size_t operator()(const shared_ptr<abstract_bipartite_edge> &e) const {
+            stringstream input_stream;
+            input_stream<<e->get_left_vertex_id()<< "," <<e->get_right_vertex_id();
+            return hash<std::string>()(input_stream.str());
+        }
+    };
+
+    struct equal_abstract_bipartite_edge {
+        bool operator()(const shared_ptr<abstract_bipartite_edge> &e1, const shared_ptr<abstract_bipartite_edge> &e2) const {
+            return e1->get_left_vertex_id() == e2->get_left_vertex_id()
+                   && e1->get_right_vertex_id() == e2->get_right_vertex_id();
         }
     };
 }

@@ -2,12 +2,6 @@
 #include "io/abstract_bipartite_graph_io.h"
 
 namespace scnu {
-    /**
-     * @details load all edges from a given file
-     * @param path
-     * @param file_name
-     * @return
-     */
     shared_ptr<vector<shared_ptr<abstract_bipartite_edge>>>
     abstract_bipartite_graph_io::get_edge_vector(const string &path,
                                                  const string &file_name) {
@@ -97,7 +91,7 @@ namespace scnu {
     * @param input_path
     * @param output_path
     */
-    void abstract_bipartite_graph_io::output_csv_file(const string &input_path, const string &output_path, uint32_t thread_number) {
+    void abstract_bipartite_graph_io::store_graph(const string &input_path, const string &output_path, uint32_t thread_number) {
         auto directory = path(input_path);
 
         thread_pool pool(thread_number);
@@ -106,16 +100,16 @@ namespace scnu {
                 continue;
             }
             pool.submit_task([=] {
-                unordered_set<pair<uint32_t, uint32_t>, hash_pair, equal_pair> line_set;
-
 
                 auto file_name = file_iter.path().filename().string();
                 ifstream input_stream(input_path + file_name);
 
+                auto edge_set = make_shared<unordered_set<shared_ptr<abstract_bipartite_edge>, hash_abstract_bipartite_edge, equal_abstract_bipartite_edge>>();
+
                 uint32_t new_left_vertex_id = 0;
                 uint32_t new_right_vertex_id = 0;
-                auto left_vertex_id_map = make_shared<unordered_map<uint32_t, uint32_t>>();
-                auto right_vertex_id_map = make_shared<unordered_map<uint32_t, uint32_t>>();
+                auto l_map = make_shared<unordered_map<uint32_t, uint32_t>>();
+                auto r_map = make_shared<unordered_map<uint32_t, uint32_t>>();
                 string line;
                 while (getline(input_stream, line).good()) {
                     if (line.empty() || line[0] == '%' || line[0] == '#') {
@@ -125,42 +119,35 @@ namespace scnu {
                     line = string_algorithm::replace_all(line, "[ |\\t|\\r]+", ",");
                     auto line_list = string_algorithm::regex_split(line, ",");
 
-                    auto left_vertex_id = stoul(line_list->at(0));
-                    auto right_vertex_id = stoul(line_list->at(1));
+                    auto l = stoul(line_list->at(0));
+                    auto r = stoul(line_list->at(1));
 
                     /**
                      * @brief renumber the left vertex id
                      */
-                    if (!left_vertex_id_map->count(left_vertex_id)) {
-                        left_vertex_id_map->insert({left_vertex_id, ++new_left_vertex_id});
+                    if (!l_map->count(l)) {
+                        l_map->insert({l, ++new_left_vertex_id});
                     }
+                    l = l_map->at(l);
 
                     /**
                      * @brief renumber the right vertex id
                      */
-                    if (!right_vertex_id_map->count(right_vertex_id)) {
-                        right_vertex_id_map->insert({right_vertex_id, ++new_right_vertex_id});
+                    if (!r_map->count(r)) {
+                        r_map->insert({r, ++new_right_vertex_id});
                     }
+                    r = r_map->at(r);
 
-                    if (!line_set.count({left_vertex_id, right_vertex_id})) {
-                        line_set.insert({left_vertex_id, right_vertex_id});
-                    }
+                    auto e = make_shared<abstract_bipartite_edge>(l,r);
+                    edge_set->insert(e);
                 }
                 input_stream.close();
-
-                multiset<shared_ptr<abstract_bipartite_edge>, abstract_bipartite_edge_compare> edge_set;
-                for (const auto&[l, r]:line_set) {
-                    auto left_vertex_id = left_vertex_id_map->at(l);
-                    auto right_vertex_id = left_vertex_id_map->size() + right_vertex_id_map->at(r);
-                    auto edge = make_shared<abstract_bipartite_edge>(left_vertex_id, right_vertex_id);
-                    edge_set.insert(edge);
-                }
 
                 auto begin_index = file_name.find_first_of('.');
                 file_name = file_name.substr(begin_index + 1);
                 ofstream output_stream(output_path + file_name);
-                for (const auto &e:edge_set) {
-                    output_stream << e->get_left_vertex_id() << ',' << e->get_right_vertex_id() << '\n';
+                for (const auto&e:*edge_set) {
+                    output_stream << e->get_left_vertex_id()  << ',' <<(l_map->size() + e->get_right_vertex_id()) << '\n';
                 }
                 output_stream.close();
             });
