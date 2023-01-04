@@ -37,7 +37,7 @@ namespace scnu{
     }
 
     shared_ptr<weighted_bipartite_graph> weighted_bipartite_graph_io::load_graph(const shared_ptr<vector<shared_ptr<weighted_bipartite_edge>>> &edge_vector,
-                                                                                 uint32_t thread_number) {
+                                                                                 const shared_ptr<thread_pool>& pool) {
         auto graph = make_shared<weighted_bipartite_graph>();
         auto left_vertex_map = graph->get_left_vertex_map();
         auto right_vertex_map = graph->get_right_vertex_map();
@@ -45,7 +45,6 @@ namespace scnu{
         auto left_vertex_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
         auto right_vertex_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
 
-        auto pool = make_shared<thread_pool>(thread_number);
         pool->submit_task([=] {
             for (const auto &edge: *edge_vector) {
                 auto l = edge->get_left_vertex_id();
@@ -92,15 +91,15 @@ namespace scnu{
     * @param input_path
     * @param output_path
     */
-    void weighted_bipartite_graph_io::store_graph(const string &input_path, const string &output_path, uint32_t thread_number) {
+    void weighted_bipartite_graph_io::store_graph(const string &input_path, const string &output_path,
+                                                  const shared_ptr<thread_pool>& pool) {
         auto directory = path(input_path);
 
-        thread_pool pool(thread_number);
         for (const auto &file_iter:std::filesystem::directory_iterator(input_path)) {
             if(!std::filesystem::is_regular_file(file_iter)){
                 continue;
             }
-            pool.submit_task([=] {
+            pool->submit_task([=] {
 
                 auto file_name = file_iter.path().filename().string();
                 ifstream input_stream(input_path + file_name);
@@ -154,6 +153,6 @@ namespace scnu{
                 output_stream.close();
             });
         }
-        pool.barrier();
+        pool->barrier();
     }
 }

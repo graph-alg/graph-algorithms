@@ -14,3 +14,4 @@
 
 using std::string;
 using scnu::abstract_bipartite_graph_io;
+using scnu::thread_pool;

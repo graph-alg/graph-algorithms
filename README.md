@@ -1,9 +1,8 @@
 # scnu
 
 ## Description
-This is a commonly used  library of experiments, including several libraries, such as graph, io, random, string, etc.
-Note: it may exist bugs!!!
-
+This is a commonly used  library of experiments for published papers, 
+including several libraries, such as graph, io, random, string, etc.
 
 ## Software Architecture
 contents in each category
@@ -24,8 +23,8 @@ contents in each category
 1. container  
 contain some useful containers, such thread safe container and various list  
 
-2. core  
-implement decomposition and maintenance algorithms for <i>k</i>-core
+2. bipartite_core  
+implement decomposition and maintenance algorithms for (<i>i,j</i>)-core
 
 3. graph  
 common graph structure for various types of graph, e.g. general graph, bipartite graph
@@ -48,9 +47,12 @@ implement some thread classes for supporting multi-threads running
 9. time
 implement time related classes, e.g. timer for recording running time
 
-10. wing
-implement decomposition and maintenance algorithms for <i>k</i>-wing 
+...
 
+## Compile
+1. `cmake` CMakeList.txt in the root fold of the project and then `make`
+2. Executable and library files are located in the lib and test fold respectively
+ 
 
  
 

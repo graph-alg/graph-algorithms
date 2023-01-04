@@ -140,11 +140,7 @@ namespace scnu{
     }
 
 
-    void temporal_graph::insert_edge(const shared_ptr<unordered_set<shared_ptr<temporal_edge>>> &edge_set) {
-        for (const auto& edge:*edge_set) {
-            insert_edge(edge);
-        }
-    }
+
 
     void temporal_graph::insert_vertex(uint32_t vertex_id) {
         vertex_map->insert({vertex_id, make_shared<temporal_vertex>(vertex_id)});
@@ -163,11 +159,39 @@ namespace scnu{
         source_vertex->remove_edge(edge->get_destination_vertex_id(), edge);
         if (source_vertex->get_temporal_edge_size(edge->get_destination_vertex_id()) == 0) {
             source_vertex->remove_neighbor_vertex(edge->get_destination_vertex_id());
+            if(source_vertex->get_neighbor_map()->empty()) {
+                vertex_map->erase(edge->get_source_vertex_id());
+            }
         }
         auto destination_vertex = get_vertex(edge->get_destination_vertex_id());
         destination_vertex->remove_edge(edge->get_source_vertex_id(), edge);
         if (destination_vertex->get_temporal_edge_size(edge->get_source_vertex_id()) == 0) {
             destination_vertex->remove_neighbor_vertex(edge->get_source_vertex_id());
+            if(destination_vertex->get_neighbor_map()->empty()){
+                vertex_map->erase(edge->get_destination_vertex_id());
+            }
+        }
+    }
+
+    void temporal_graph::remove_edge(const shared_ptr<scnu::temporal_edge> &edge,
+                                     const shared_ptr<unordered_set<uint32_t>> &isolated_set) {
+        auto source_vertex = get_vertex(edge->get_source_vertex_id());
+        source_vertex->remove_edge(edge->get_destination_vertex_id(), edge);
+        if (source_vertex->get_temporal_edge_size(edge->get_destination_vertex_id()) == 0) {
+            source_vertex->remove_neighbor_vertex(edge->get_destination_vertex_id());
+            if(source_vertex->get_neighbor_map()->empty()){
+                vertex_map->erase(edge->get_source_vertex_id());
+                isolated_set->insert(edge->get_source_vertex_id());
+            }
+        }
+        auto destination_vertex = get_vertex(edge->get_destination_vertex_id());
+        destination_vertex->remove_edge(edge->get_source_vertex_id(), edge);
+        if (destination_vertex->get_temporal_edge_size(edge->get_source_vertex_id()) == 0) {
+            destination_vertex->remove_neighbor_vertex(edge->get_source_vertex_id());
+            if(destination_vertex->get_neighbor_map()->empty()){
+                vertex_map->erase(edge->get_destination_vertex_id());
+                isolated_set->insert(edge->get_destination_vertex_id());
+            }
         }
     }
 
@@ -177,5 +201,21 @@ namespace scnu{
 
         auto destination_vertex = get_vertex(destination_vertex_id);
         destination_vertex->remove_neighbor_vertex(source_vertex_id);
+    }
+
+    void temporal_graph::remove_edges(uint32_t source_vertex_id, uint32_t destination_vertex_id,const shared_ptr<unordered_set<uint32_t>> &isolated_set) {
+        auto source_vertex = get_vertex(source_vertex_id);
+        source_vertex->remove_neighbor_vertex(destination_vertex_id);
+        if(source_vertex->get_neighbor_map()->empty()){
+            vertex_map->erase(source_vertex_id);
+            isolated_set->insert(source_vertex_id);
+        }
+
+        auto destination_vertex = get_vertex(destination_vertex_id);
+        destination_vertex->remove_neighbor_vertex(source_vertex_id);
+        if(destination_vertex->get_neighbor_map()->empty()){
+            vertex_map->erase(destination_vertex_id);
+            isolated_set->insert(destination_vertex_id);
+        }
     }
 }

@@ -53,7 +53,7 @@ namespace scnu{
 
     shared_ptr<weighted_graph>
     weighted_graph_io::load_graph(const shared_ptr<vector<shared_ptr<temporal_edge>>> &edge_vector,
-                                  uint32_t thread_number) {
+                                  const shared_ptr<thread_pool>& pool) {
         auto graph = make_shared<weighted_graph>();
         auto vertex_map = graph->get_vertex_map();
         auto vertex_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
@@ -79,7 +79,6 @@ namespace scnu{
                 edge_map->insert({{u,v}, make_shared<weighted_edge>(u,v,1)});
             }
         }
-        auto pool = make_shared<thread_pool>(thread_number);
         for(const auto &p: *edge_map){
             pool->submit_task([=]{
                 auto edge = p.second;
@@ -104,7 +103,7 @@ namespace scnu{
 
     shared_ptr<weighted_graph>
     weighted_graph_io::load_graph(const shared_ptr<vector<shared_ptr<weighted_edge>>> &edge_vector,
-                                  uint32_t thread_number) {
+                                  const shared_ptr<thread_pool>& pool) {
         auto graph = make_shared<weighted_graph>();
         auto vertex_map = graph->get_vertex_map();
         auto vertex_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
@@ -120,7 +119,7 @@ namespace scnu{
                 vertex_mutex_map->insert({v, make_shared<mutex>()});
             }
         }
-        auto pool = make_shared<thread_pool>(thread_number);
+
         for(const auto &edge: *edge_vector){
             pool->submit_task([=]{
                 auto u = edge->get_source_vertex_id();
@@ -147,15 +146,15 @@ namespace scnu{
      * @param input_path
      * @param output_path
      */
-    void weighted_graph_io::store_graph(const string &input_path, const string &output_path, uint32_t thread_number) {
+    void weighted_graph_io::store_graph(const string &input_path, const string &output_path,
+                                        const shared_ptr<thread_pool>& pool) {
         auto directory = path(input_path);
 
-        thread_pool pool(thread_number);
         for (auto &file_iter:std::filesystem::directory_iterator(input_path)) {
             if(!std::filesystem::is_regular_file(file_iter)){
                 continue;
             }
-            pool.submit_task([=] {
+            pool->submit_task([=] {
                 auto edge_set = make_shared<unordered_set<shared_ptr<weighted_edge>>>();
 
                 unordered_map<uint32_t, uint32_t> vertex_id_map;
@@ -218,6 +217,6 @@ namespace scnu{
                 output_stream.close();
             });
         }
-        pool.barrier();
+        pool->barrier();
     }
 }

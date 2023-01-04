@@ -184,7 +184,7 @@ namespace scnu
                                                             value_type value)
         {
             /**
-             * @details two cases: (1) pivot node does not exist
+             * @details two cases: (1) pivot node does not count
              * (2) pivot node is the rear node
              */
             if(!pivot_node||!pivot_node->get_next())

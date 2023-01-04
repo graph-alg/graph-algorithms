@@ -19,7 +19,7 @@ namespace scnu {
             auto t = std::thread(&thread_pool::worker_thread, this,i);
             auto thread_id = t.get_id();
             thread_id_map.insert({thread_id,i});
-            thread_vector.emplace_back(move(t));
+            thread_vector.emplace_back(std::move(t));
         }
     }
 

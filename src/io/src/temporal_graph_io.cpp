@@ -41,7 +41,7 @@ namespace scnu{
 
     shared_ptr<temporal_graph>
     temporal_graph_io::load_graph(const shared_ptr<vector<shared_ptr<temporal_edge>>> &edge_vector,
-                                  uint32_t thread_number) {
+                                  const shared_ptr<thread_pool>& pool) {
         auto graph = make_shared<temporal_graph>();
         auto vertex_map = graph->get_vertex_map();
         auto vertex_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
@@ -57,7 +57,7 @@ namespace scnu{
                 vertex_mutex_map->insert({v, make_shared<mutex>()});
             }
         }
-        auto pool = make_shared<thread_pool>(thread_number);
+
         for(const auto &edge: *edge_vector){
             pool->submit_task([=]{
                 auto u = edge->get_source_vertex_id();
@@ -84,15 +84,15 @@ namespace scnu{
      * @param input_path
      * @param output_path
      */
-    void temporal_graph_io::store_graph(const string &input_path, const string &output_path, uint32_t thread_number) {
+    void temporal_graph_io::store_graph(const string &input_path, const string &output_path,
+                                        const shared_ptr<thread_pool>& pool) {
         auto directory = path(input_path);
 
-        thread_pool pool(thread_number);
         for (auto &file_iter:std::filesystem::directory_iterator(input_path)) {
             if(!std::filesystem::is_regular_file(file_iter)){
                 continue;
             }
-            pool.submit_task([=] {
+            pool->submit_task([=] {
                 auto edge_map = make_shared<map<uint32_t, shared_ptr<unordered_set<shared_ptr<temporal_edge>, hash_temporal_edge,equal_temporal_edge>>>>();
 
                 auto vertex_id_map = make_shared<unordered_map<uint32_t, uint32_t>>();
@@ -169,19 +169,20 @@ namespace scnu{
                 output_stream.close();
             });
         }
-        pool.barrier();
+        pool->barrier();
     }
 
-    void temporal_graph_io::output_unique_graph(const string &input_path, const string &output_path, uint32_t thread_number) {
+    void temporal_graph_io::output_unique_graph(const string &input_path, const string &output_path,
+                                                const shared_ptr<thread_pool>& pool) {
         auto directory = path(input_path);
 
-        thread_pool pool(thread_number);
         for (auto &file_iter:std::filesystem::directory_iterator(input_path)) {
             if(!std::filesystem::is_regular_file(file_iter)){
                 continue;
             }
-            pool.submit_task([=] {
-                auto edge_map =  make_shared<map<uint32_t, shared_ptr<unordered_set<shared_ptr<abstract_edge>, hash_abstract_edge, equal_abstract_edge>>>>();;
+            pool->submit_task([=] {
+                auto edge_set =  make_shared<unordered_set<shared_ptr<abstract_edge>, hash_abstract_edge, equal_abstract_edge>>();
+                auto edge_map = make_shared<map<uint32_t, shared_ptr<unordered_set<shared_ptr<abstract_edge>>>>>();
 
                 auto vertex_id_map = make_shared<unordered_map<uint32_t, uint32_t> >();
                 uint32_t vertex_id = 1;
@@ -233,21 +234,24 @@ namespace scnu{
                     }
 
 
-                    if(!edge_map->count(t)){
-                        edge_map->insert({t, make_shared<unordered_set<shared_ptr<abstract_edge>, hash_abstract_edge, equal_abstract_edge>>()});
+                    auto e  = make_shared<abstract_edge>(u, v);
+                    if(!edge_set->count(e)){
+                        edge_set->insert(e);
+                        if(!edge_map->count(t)){
+                            edge_map->insert({t, make_shared<unordered_set<shared_ptr<abstract_edge>>>()});
+                        }
+                        edge_map->at(t)->insert(e);
                     }
-
-                    auto e = make_shared<abstract_edge>(u,v);
-                    edge_map->at(t)->insert(e);
                 }
                 input_stream.close();
+                edge_set->clear();
 
                 auto begin_index = file_name.find_last_of('.');
                 file_name = file_name.substr(begin_index+1);
                 ofstream output_stream(output_path + file_name);
-                for(const auto& [t, t_set]:*edge_map){
-                    for (const auto &e: *t_set) {
-                        output_stream << e->get_source_vertex_id() << ','
+                for(const auto& [t, e_set]:*edge_map){
+                    for(const auto &e :*e_set){
+                        output_stream <<  e->get_source_vertex_id() << ','
                                       << e->get_destination_vertex_id() << ','
                                       << t << '\n';
                     }
@@ -256,6 +260,6 @@ namespace scnu{
                 output_stream.close();
             });
         }
-        pool.barrier();
+        pool->barrier();
     }
 }

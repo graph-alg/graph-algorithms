@@ -69,7 +69,7 @@ namespace scnu
             {
                 return false;
             }
-            value = move(data_queue.front());
+            value = std::move(data_queue.front());
             data_queue.pop();
             return true;
         }

@@ -20,9 +20,11 @@ namespace scnu
 
         static shared_ptr<abstract_bipartite_graph> load_graph(const shared_ptr<vector<shared_ptr<abstract_bipartite_edge>>>& edge_vector);
 
-        static shared_ptr<abstract_bipartite_graph> load_graph(const shared_ptr<vector<shared_ptr<abstract_bipartite_edge>>> &edge_vector, uint32_t thread_number);
+        static shared_ptr<abstract_bipartite_graph> load_graph(const shared_ptr<vector<shared_ptr<abstract_bipartite_edge>>> &edge_vector,
+                                                               const shared_ptr<thread_pool>& pool);
 
-        static void store_graph(const string &input_path, const string &output_path, uint32_t thread_number);
+        static void store_graph(const string &input_path, const string &output_path,
+                                const shared_ptr<thread_pool>& pool);
 
 
         /**

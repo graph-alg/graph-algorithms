@@ -51,7 +51,12 @@ namespace scnu{
 
         void insert_edge(const shared_ptr<temporal_edge>& edge);
 
-        void insert_edge(const shared_ptr<unordered_set<shared_ptr<temporal_edge>>> & edge_set);
+        template<class container_type>
+        void insert_edge_collection(container_type edge_container){
+            for(const auto &e:*edge_container){
+                insert_edge(e);
+            }
+        }
 
         void insert_vertex(uint32_t vertex_id);
 
@@ -59,7 +64,25 @@ namespace scnu{
 
         void remove_edge(const shared_ptr<temporal_edge>& edge);
 
+        void remove_edge(const shared_ptr<temporal_edge>& edge, const shared_ptr<unordered_set<uint32_t>>& isolated_set);
+
         void remove_edges(uint32_t source_vertex_id, uint32_t destination_vertex_id);
+
+        void remove_edges(uint32_t source_vertex_id, uint32_t destination_vertex_id, const shared_ptr<unordered_set<uint32_t>>& isolated_set);
+
+        template<class container_type>
+        void remove_edge_collection(container_type edge_container){
+            for(const auto &e:*edge_container){
+                remove_edge(e);
+            }
+        }
+
+        template<class container_type>
+        void remove_edge_collection(container_type edge_container, const shared_ptr<unordered_set<uint32_t>>& isolated_set){
+            for(const auto &e:*edge_container){
+                remove_edge(e, isolated_set);
+            }
+        }
 
         void remove_vertex(uint32_t vertex_id);
 

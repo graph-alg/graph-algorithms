@@ -9,7 +9,8 @@ int main(int argc, char **argv) {
     std::string output_path(argv[2]);
 
     auto thread_number = std::stoul(argv[3]);
-    abstract_bipartite_graph_io::store_graph(input_path, output_path, thread_number);
+    auto pool = make_shared<scnu::thread_pool>(thread_number);
+    abstract_bipartite_graph_io::store_graph(input_path, output_path, pool);
     return 0;
 }
 

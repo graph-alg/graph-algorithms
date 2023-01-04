@@ -69,7 +69,8 @@ namespace scnu {
     }
 
     shared_ptr<abstract_graph>
-    abstract_graph_io::load_graph(const shared_ptr<vector<shared_ptr<abstract_edge>>> &edge_vector, uint32_t thread_number) {
+    abstract_graph_io::load_graph(const shared_ptr<vector<shared_ptr<abstract_edge>>> &edge_vector,
+                                  const shared_ptr<thread_pool>& pool) {
         auto graph = make_shared<abstract_graph>();
         auto vertex_map = graph->get_vertex_map();
         auto vertex_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
@@ -86,7 +87,7 @@ namespace scnu {
             }
         }
 
-        auto pool = make_shared<thread_pool>();
+        auto thread_number = pool->get_thread_number();
         uint32_t task_number = edge_vector->size() % thread_number == 0? edge_vector->size()/ thread_number: edge_vector->size()/ thread_number+1;
         for(uint32_t i = 0;i< thread_number;++i){
             pool->submit_task([=]{
@@ -98,12 +99,12 @@ namespace scnu {
 
                     auto u_vertex = vertex_map->at(u);
                     vertex_mutex_map->at(u)->lock();
-                    u_vertex->insert_edge(v,edge);
+                    u_vertex->insert_edge(v, edge);
                     vertex_mutex_map->at(u)->unlock();
 
                     auto v_vertex = vertex_map->at(v);
                     vertex_mutex_map->at(v)->lock();
-                    v_vertex->insert_edge(u,edge);
+                    v_vertex->insert_edge(u, edge);
                     vertex_mutex_map->at(v)->unlock();
                 }
             });
@@ -113,13 +114,13 @@ namespace scnu {
     }
 
     shared_ptr<abstract_graph>
-    abstract_graph_io::load_graph(const shared_ptr<abstract_graph> &other_graph, uint32_t thread_number) {
+    abstract_graph_io::load_graph(const shared_ptr<abstract_graph> &other_graph,
+                                  const shared_ptr<thread_pool>& pool) {
         auto graph = make_shared<abstract_graph>();
         auto vertex_map = graph->get_vertex_map();
         for (const auto &[u,u_vertex]: *other_graph->get_vertex_map()) {
             vertex_map->insert({u, shared_ptr<abstract_vertex>()});
         }
-        auto pool = make_shared<thread_pool>(thread_number);
         for (const auto &p: *other_graph->get_vertex_map()) {
             pool->submit_task([=]{
                 auto [u,other_u_vertex] = p;
@@ -136,15 +137,15 @@ namespace scnu {
      * @param input_path
      * @param output_path
      */
-    void abstract_graph_io::store_graph(const string &input_path, const string &output_path, uint32_t thread_number) {
+    void abstract_graph_io::store_graph(const string &input_path, const string &output_path,
+                                        const shared_ptr<thread_pool>& pool) {
         auto directory = path(input_path);
 
-        thread_pool pool(thread_number);
         for (auto &file_iter:std::filesystem::directory_iterator(input_path)) {
             if(!std::filesystem::is_regular_file(file_iter)){
                 continue;
             }
-            pool.submit_task([=] {
+            pool->submit_task([=] {
                 auto edge_set = make_shared<unordered_set<shared_ptr<abstract_edge>, hash_abstract_edge, equal_abstract_edge>>();
 
                 auto vertex_id_map = make_shared<unordered_map<uint32_t, uint32_t> >();
@@ -206,7 +207,7 @@ namespace scnu {
                 output_stream.close();
             });
         }
-        pool.barrier();
+        pool->barrier();
     }
 }
 

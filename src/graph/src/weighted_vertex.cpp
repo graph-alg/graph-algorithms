@@ -1,5 +1,5 @@
 
-#include "../../../include/graph/weighted_vertex.h"
+#include "graph/weighted_vertex.h"
 
 namespace scnu{
     weighted_vertex::weighted_vertex(uint32_t other_vertex_id) {

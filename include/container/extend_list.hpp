@@ -173,7 +173,7 @@ namespace scnu
             if(!pivot_node)
             {
                 /**
-                 * @brief the pivot node does exist
+                 * @brief the pivot node does count
                  */
                 head = node;
                 rear = node;
@@ -183,7 +183,7 @@ namespace scnu
                 if(pivot_node==rear)
                 {
                     /**
-                     * @brief the next node does not exist
+                     * @brief the next node does not count
                      * @remarks the key is comparable and ordered
                      */
                     auto key = pivot_node->get_key() + 1;
@@ -222,7 +222,7 @@ namespace scnu
             if(!pivot_node)
             {
                 /**
-                  * @brief the pivot node does exist
+                  * @brief the pivot node does count
                   */
                 head= node;
                 rear = node;
@@ -231,7 +231,7 @@ namespace scnu
             {
 
                 /**
-                 * @brief the prior node does not exist
+                 * @brief the prior node does not count
                  */
                 if(pivot_node == head)
                 {
@@ -268,7 +268,7 @@ namespace scnu
          */
         shared_ptr<extend_node<key_type,value_type>> left_insert(value_type value) {
             /**
-            * @brief two cases: (1) the head of this list does not exist
+            * @brief two cases: (1) the head of this list does not count
              * (2) the head of this list exists
             */
             auto node = make_shared<extend_node<key_type,value_type>>(0, value);
@@ -296,7 +296,7 @@ namespace scnu
          */
         void left_insert(const shared_ptr<extend_node<key_type,value_type>>& node) {
             /**
-             * @details two cases: (1) the head of this list does not exist
+             * @details two cases: (1) the head of this list does not count
              * (2) the head of this list exists
              */
             if (!head) {
@@ -329,7 +329,7 @@ namespace scnu
           */
         void right_insert(const shared_ptr<extend_node<key_type,value_type>>& node) {
             /**
-             * @details two cases: (1) the head of this list does not exist
+             * @details two cases: (1) the head of this list does not count
              * (2) the head of this list exists
              */
             if (!rear) {
@@ -352,7 +352,7 @@ namespace scnu
          */
         shared_ptr<extend_node<key_type,value_type>> push_back(value_type value) {
             /**
-            * @brief two cases: (1) the rear of this list does not exist
+            * @brief two cases: (1) the rear of this list does not count
             * (2) the rear of this list exists
             */
             auto node = make_shared<extend_node<key_type,value_type>>(0, value);

@@ -36,6 +36,45 @@ namespace scnu
 
         void run_pending_task(uint32_t thread_id);
 
+        template<class container_type>
+        auto split_task(const container_type& container){
+            auto thread_number = get_thread_number();
+            if(container->size() == 0){
+                return make_shared<vector<shared_ptr<decltype(container->begin())>>>(thread_number + 1,
+                                                                                     shared_ptr<decltype(container->begin())>());
+            }
+            auto task_count = container->size()/thread_number;
+            auto location_vector = make_shared<vector<shared_ptr<decltype(container->begin())>>>(thread_number + 1,
+                                                                                                 shared_ptr<decltype(container->begin())>());
+            if(task_count > 0){
+                for(uint32_t i = thread_number - 1; i > 0;--i){
+                    submit_task([=]{
+                        location_vector->at(i) = make_shared<decltype(container->begin())>(container->begin());
+                        std::advance(*location_vector->at(i), i * task_count);
+                    });
+                }
+                location_vector->at(0) = make_shared<decltype(container->begin())>(container->begin());
+                location_vector->at(thread_number) = make_shared<decltype(container->begin())>(container->end());
+                barrier();
+            }else{
+                for(uint32_t i = 1; i < thread_number;++i){
+                    submit_task([=]{
+                        if(i < container->size()){
+                            location_vector->at(i) = make_shared<decltype(container->begin())>(container->begin());
+                            std::advance(*location_vector->at(i), i);
+                        }
+                        else{
+                            location_vector->at(i) = make_shared<decltype(container->begin())>(container->end());
+                        }
+                    });
+                }
+                location_vector->at(0) = make_shared<decltype(container->begin())>(container->begin());
+                location_vector->at(thread_number) = make_shared<decltype(container->begin())>(container->end());
+                barrier();
+            }
+            return location_vector;
+        }
+
         template<typename function_type>
         future<std::result_of_t<function_type()>> submit_async_task(function_type function)
         {
@@ -44,7 +83,7 @@ namespace scnu
             future<ResultType> result(task.get_future());
             uint32_t index = task_id % local_work_queue_vector.size();
             ++task_id;
-            local_work_queue_vector.at(index)->push(function_wrapper(move(task)));
+            local_work_queue_vector.at(index)->push(function_wrapper(std::move(task)));
             return result;
         }
 
@@ -54,13 +93,13 @@ namespace scnu
         {
             uint32_t index = task_id % local_work_queue_vector.size();
             ++task_id;
-            local_work_queue_vector.at(index)->push(function_wrapper(move(function)));
+            local_work_queue_vector.at(index)->push(function_wrapper(std::move(function)));
         }
 
         template<typename function_type>
         void submit_task(function_type function, uint32_t index)
         {
-            local_work_queue_vector.at(index)->push(function_wrapper(move(function)));
+            local_work_queue_vector.at(index)->push(function_wrapper(std::move(function)));
         }
 
 

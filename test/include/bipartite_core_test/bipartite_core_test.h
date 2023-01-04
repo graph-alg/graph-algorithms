@@ -11,7 +11,7 @@
 #include "bipartite_core/basic_bipartite_core_decomposition.h"
 #include "bipartite_core/branch_bipartite_core_decomposition.h"
 #include "bipartite_core/branch_bipartite_core_maintenance.h"
-#include "bipartite_core/edge_bipartite_core_decomposition.h"
+#include "bipartite_core/share_bipartite_core_decomposition.h"
 #include "bipartite_core/edge_bipartite_core_maintenance.h"
 #include "bipartite_core/quasi_bipartite_core_maintenance.h"
 #include "container/container_compare.hpp"
@@ -32,6 +32,7 @@ using scnu::abstract_bipartite_graph_io;
 using scnu::basic_bipartite_core_decomposition;
 using scnu::bipartite_core;
 using scnu::bipartite_core_compare;
+using scnu::bipartite_core_degree_index;
 using scnu::branch_bipartite_core_decomposition;
 using scnu::branch_bipartite_core_maintenance;
 using scnu::container_compare;
@@ -39,7 +40,7 @@ using scnu::container_convert;
 using scnu::container_copy;
 using scnu::double_list;
 using scnu::double_node;
-using scnu::edge_bipartite_core_decomposition;
+using scnu::share_bipartite_core_decomposition;
 using scnu::edge_bipartite_core_maintenance;
 using scnu::extend_list;
 using scnu::extend_node;
