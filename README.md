@@ -4,6 +4,8 @@
 This is a commonly used  library of experiments for published papers, 
 including several libraries, such as graph, io, random, string, etc.
 
+Note: the source codes may exist some unknown bugs waited to be fixed.
+
 ## Software Architecture
 contents in each category
 
@@ -50,7 +52,7 @@ implement time related classes, e.g. timer for recording running time
 ...
 
 ## Compile
-1. `cmake` CMakeList.txt in the root fold of the project and then `make`
+1. `cmake` CMakeLists.txt in the root fold of the project and then `make`
 2. Executable and library files are located in the lib and test fold respectively
  
 
