@@ -25,6 +25,20 @@ namespace scnu{
 
         static void output_unique_graph(const string &input_path, const string &output_path,
                                         const shared_ptr<thread_pool>& pool);
+
+        /**
+        * @details convert edge collection to csv format
+        * @param edge_vector
+        * @param output_file
+        */
+        template <typename T>
+        static void output_csv_file(const T edge_container, const string &output_file) {
+            ofstream output_stream(output_file);
+            for (const auto &e:*edge_container) {
+                output_stream << e->get_source_vertex_id() << ',' << e->get_destination_vertex_id() << ',' <<e->get_weight() <<',' << e->get_timestamp() << '\n';
+            }
+            output_stream.close();
+        }
     };
 }
 

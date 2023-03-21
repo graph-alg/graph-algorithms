@@ -39,37 +39,27 @@ namespace scnu
         template<class container_type>
         auto split_task(const container_type& container){
             auto thread_number = get_thread_number();
-            if(container->size() == 0){
-                return make_shared<vector<shared_ptr<decltype(container->begin())>>>(thread_number + 1,
-                                                                                     shared_ptr<decltype(container->begin())>());
-            }
-            auto task_count = container->size()/thread_number;
             auto location_vector = make_shared<vector<shared_ptr<decltype(container->begin())>>>(thread_number + 1,
                                                                                                  shared_ptr<decltype(container->begin())>());
-            if(task_count > 0){
-                for(uint32_t i = thread_number - 1; i > 0;--i){
-                    submit_task([=]{
-                        location_vector->at(i) = make_shared<decltype(container->begin())>(container->begin());
-                        std::advance(*location_vector->at(i), i * task_count);
-                    });
+            location_vector->at(0) = make_shared<decltype(container->begin())>(container->begin());
+            location_vector->at(thread_number) = make_shared<decltype(container->end())>(container->end());
+            if(container->empty()){
+                for (uint32_t i = 1; i < thread_number; ++i) {
+                    location_vector->at(i) = location_vector->at(thread_number);
                 }
-                location_vector->at(0) = make_shared<decltype(container->begin())>(container->begin());
-                location_vector->at(thread_number) = make_shared<decltype(container->begin())>(container->end());
-                barrier();
             }else{
-                for(uint32_t i = 1; i < thread_number;++i){
-                    submit_task([=]{
-                        if(i < container->size()){
+                auto task_count = container->size() / thread_number + 1;
+                for (uint32_t i = thread_number - 1; i > 0;--i) {
+                    submit_task([=] {
+                        auto distance = i * task_count;
+                        if (distance < container->size()) {
                             location_vector->at(i) = make_shared<decltype(container->begin())>(container->begin());
-                            std::advance(*location_vector->at(i), i);
-                        }
-                        else{
-                            location_vector->at(i) = make_shared<decltype(container->begin())>(container->end());
+                            std::advance(*location_vector->at(i), distance);
+                        } else {
+                            location_vector->at(i) = location_vector->at(thread_number);
                         }
                     });
                 }
-                location_vector->at(0) = make_shared<decltype(container->begin())>(container->begin());
-                location_vector->at(thread_number) = make_shared<decltype(container->begin())>(container->end());
                 barrier();
             }
             return location_vector;

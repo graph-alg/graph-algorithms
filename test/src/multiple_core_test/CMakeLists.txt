@@ -1,0 +1,17 @@
+project(multiple_core_test)
+
+include_directories(${HOME_DIR}/include ${HOME_DIR}/test/include)
+
+link_directories(${HOME_DIR}/lib /usr/lib64)
+
+link_libraries(time multiple_core graph io logger string random pthread thread stdc++fs)
+
+add_executable(multiple_core_index_performance_test src/multiple_core_index_performance_test.cpp)
+add_executable(multiple_core_index_scalability_test src/multiple_core_index_scalability_test.cpp)
+
+add_executable(multiple_core_performance_test src/multiple_core_performance_test.cpp)
+add_executable(multiple_core_compare_scalability_test src/multiple_core_compare_scalability_test.cpp)
+add_executable(multiple_core_size_scalability_test src/multiple_core_size_scalability_test.cpp)
+add_executable(multiple_core_thread_scalability_test src/multiple_core_thread_scalability_test.cpp)
+
+add_executable(split_temporal_edges src/split_temporal_edges.cpp)

@@ -33,9 +33,28 @@ namespace scnu{
     shared_ptr<temporal_graph>
     temporal_graph_io::load_graph(const shared_ptr<vector<shared_ptr<temporal_edge>>> &edge_vector) {
         auto graph = make_shared<temporal_graph>();
+        auto vertex_map = graph->get_vertex_map();
         for (const auto &edge: *edge_vector) {
-            graph->insert_edge(edge);
+            auto u = edge->get_source_vertex_id();
+            if (!vertex_map->count(u)) {
+                vertex_map->insert({u, make_shared<temporal_vertex>(u)});
+            }
+            auto v = edge->get_destination_vertex_id();
+            if (!vertex_map->count(v)) {
+                vertex_map->insert({v, make_shared<temporal_vertex>(v)});
+            }
         }
+
+        for (const auto &edge: *edge_vector) {
+            auto u = edge->get_source_vertex_id();
+            auto v = edge->get_destination_vertex_id();
+            auto u_vertex = vertex_map->at(u);
+            auto v_vertex = vertex_map->at(v);
+
+            u_vertex->insert_edge(v, edge);
+            v_vertex->insert_edge(u, edge);
+        }
+
         return graph;
     }
 

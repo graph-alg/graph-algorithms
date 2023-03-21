@@ -71,7 +71,7 @@ struct equal_pair {
  */
 struct hash_pair {
     size_t operator()(const std::pair<uint64_t , uint64_t> &p) const {
-        return hash<uint64_t>()( (p.first << 2) - p.first + p.second);
+        return hash<uint32_t>()((p.first >> 2) + p.second);
     }
 };
 
