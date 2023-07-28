@@ -379,7 +379,7 @@ namespace scnu {
                 for(auto iter = sub_begin; iter!=sub_end; ++iter){
                     auto &u = *iter;
                     auto &u_index = vertex_index_map->at(u);
-                    auto k = u_index->get_i(h);
+                    auto k = u_index->get_k(h);
                     if (k > sub_max_k) {
                         sub_max_k = k;
                     }
@@ -429,7 +429,7 @@ namespace scnu {
                 for(auto iter = sub_begin; iter!=sub_end; ++iter){
                     auto &u = *iter;
                     auto &u_index = vertex_index_map->at(u);
-                    auto h = u_index->get_j(k);
+                    auto h = u_index->get_h(k);
                     if (h > sub_max_h) {
                         sub_max_h = h;
                     }
