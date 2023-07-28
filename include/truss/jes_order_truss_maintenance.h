@@ -8,9 +8,6 @@
 
 #pragma once
 #include "truss/truss_utility.h"
-#include "jes_truss_maintenance.h"
-#include "basic_truss_decomposition.h"
-#include "order_truss_maintenance.h"
 
 namespace scnu
 {

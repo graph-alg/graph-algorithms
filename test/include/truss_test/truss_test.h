@@ -7,15 +7,14 @@
 ******************************************************************************************************************/
 
 #pragma once
-#include "core/basic_core_decomposition.h"
-#include "core/bin_sort_core_decomposition.h"
+
 #include "container/container_compare.hpp"
 #include "container/container_convert.hpp"
 #include "container/container_copy.hpp"
 #include "container/container_operate.hpp"
 #include "truss/basic_truss_decomposition.h"
 #include "truss/bin_sort_truss_decomposition.h"
-//#include "truss/order_truss_maintenance.h"
+#include "truss/order_truss_maintenance.h"
 #include "truss/jes_truss_maintenance.h"
 #include "truss/mixed_structure_truss_maintenance.h"
 #include "truss/jes_order_truss_maintenance.h"
