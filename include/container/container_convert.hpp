@@ -165,7 +165,7 @@ namespace scnu
             auto destination_container = make_shared<unordered_set<value_type>>();
             for(const auto& value:*source_container)
             {
-                destination_container->insert(value);
+                destination_container->insert(static_cast<const unsigned int>(value));
             }
             return destination_container;
         }

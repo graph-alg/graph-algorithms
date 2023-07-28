@@ -88,12 +88,13 @@ namespace scnu {
         }
 
         auto thread_number = pool->get_thread_number();
-        uint32_t task_number = edge_vector->size() % thread_number == 0? edge_vector->size()/ thread_number: edge_vector->size()/ thread_number+1;
+        auto location_vector = pool->split_task(edge_vector);
         for(uint32_t i = 0;i< thread_number;++i){
-            pool->submit_task([=]{
-                auto end_point = std::min((i+1)*task_number,uint32_t(edge_vector->size()));
-                for(uint32_t j = i * task_number;j < end_point;++j){
-                    auto edge = edge_vector->at(j);
+            pool->submit_task([=] {
+                auto &sub_begin = *location_vector->at(i);
+                auto &sub_end = *location_vector->at(i + 1);
+                for (auto iter = sub_begin; iter != sub_end; ++iter) {
+                    auto &edge = *iter;
                     auto u = edge->get_source_vertex_id();
                     auto v = edge->get_destination_vertex_id();
 
@@ -113,12 +114,65 @@ namespace scnu {
         return graph;
     }
 
+
+    shared_ptr<abstract_graph>
+    abstract_graph_io::load_graph(const shared_ptr<vector<shared_ptr<abstract_edge>>> &edge_vector,
+                                  uint32_t size,
+                                  const shared_ptr<thread_pool> &pool) {
+        auto sub_edge_vector = make_shared<vector<shared_ptr<abstract_edge>>>(size);
+        for (uint32_t i = 0; i < size; ++i) {
+            sub_edge_vector->at(i) = edge_vector->at(i);
+        }
+
+        auto G = make_shared<abstract_graph>();
+        auto vertex_map = G->get_vertex_map();
+        auto vertex_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+        for (const auto &edge: *sub_edge_vector) {
+            auto u = edge->get_source_vertex_id();
+            if (!vertex_map->count(u)) {
+                vertex_map->insert({u, make_shared<abstract_vertex>(u)});
+                vertex_mutex_map->insert({u, make_shared<mutex>()});
+            }
+            auto v = edge->get_destination_vertex_id();
+            if (!vertex_map->count(v)) {
+                vertex_map->insert({v, make_shared<abstract_vertex>(v)});
+                vertex_mutex_map->insert({v, make_shared<mutex>()});
+            }
+        }
+
+        auto thread_number = pool->get_thread_number();
+        auto location_vector = pool->split_task(sub_edge_vector);
+        for (uint32_t i = 0; i < thread_number; ++i) {
+            pool->submit_task([=] {
+                auto sub_begin = *location_vector->at(i);
+                auto sub_end = *location_vector->at(i + 1);
+                for (auto iter = sub_begin; iter != sub_end; ++iter) {
+                    auto edge = *iter;
+                    auto u = edge->get_source_vertex_id();
+                    auto v = edge->get_destination_vertex_id();
+
+                    auto u_vertex = vertex_map->at(u);
+                    vertex_mutex_map->at(u)->lock();
+                    u_vertex->insert_edge(v, edge);
+                    vertex_mutex_map->at(u)->unlock();
+
+                    auto v_vertex = vertex_map->at(v);
+                    vertex_mutex_map->at(v)->lock();
+                    v_vertex->insert_edge(u, edge);
+                    vertex_mutex_map->at(v)->unlock();
+                }
+            });
+        }
+        pool->barrier();
+        return G;
+    }
+
     shared_ptr<abstract_graph>
     abstract_graph_io::load_graph(const shared_ptr<abstract_graph> &other_graph,
-                                  const shared_ptr<thread_pool>& pool) {
+                                  const shared_ptr<thread_pool> &pool) {
         auto graph = make_shared<abstract_graph>();
         auto vertex_map = graph->get_vertex_map();
-        for (const auto &[u,u_vertex]: *other_graph->get_vertex_map()) {
+        for (const auto &[u, u_vertex]: *other_graph->get_vertex_map()) {
             vertex_map->insert({u, shared_ptr<abstract_vertex>()});
         }
         for (const auto &p: *other_graph->get_vertex_map()) {

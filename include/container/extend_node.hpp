@@ -9,6 +9,7 @@
 #pragma once
 
 #include "container/container_utility.h"
+#include "graph/abstract_edge.h"
 
 namespace scnu
 {
@@ -130,13 +131,16 @@ namespace scnu
         shared_ptr<extend_node<key_type,value_type>> prior;
         shared_ptr<extend_node<key_type,value_type>> next;
     };
+
+    template <typename key_type, typename value_type>
+    struct extend_node_compare
+    {
+        bool operator()(const shared_ptr<scnu::extend_node<key_type, value_type>> node1,
+                        const shared_ptr<scnu::extend_node<key_type, value_type>>& node2) const
+        {
+            return node1->get_key() < node2->get_key();
+        }
+    };
 }
 
-struct extend_node_compare
-{
-    bool operator()(const shared_ptr<scnu::extend_node<double,uint32_t>>& node1,
-                   const shared_ptr<scnu::extend_node<double,uint32_t>>& node2) const
-    {
-        return node1->get_key() < node2->get_key();
-    }
-};
+

@@ -42,28 +42,14 @@ namespace scnu
          * @param other_list
          */
         explicit extend_list(const shared_ptr<extend_list<key_type,value_type>>& other_list):extend_list(){
-            auto other_head = other_list->head;
-            if(!other_head){
-                return;
-            }
-            head = make_shared<extend_node<key_type, value_type>>(other_head->get_key(),other_head->get_value());
-            node_map->insert({head->get_value(),head});
-
-            rear = head;
-            auto p = other_head->get_next();
+            auto p = other_list->get_head();
             while (p) {
-                auto node = make_shared<extend_node<key_type, value_type>>(p->get_key(),p->get_value());
-                node_map->insert({node->get_value(),node});
-
-                rear->set_next(node);
-                node->set_prior(rear);
-                rear = node;
+                auto node = make_shared<extend_node<key_type, value_type>>(0, p->get_value());
+                right_insert(node);
 
                 p = p->get_next();
             }
         }
-        
-        ~extend_list() = default;
 
         /**
          * @details provide forward iterator
@@ -89,8 +75,7 @@ namespace scnu
          * @param value
          * @return
          */
-        uint32_t count_value(value_type value)
-        {
+        bool count_value(const value_type &value) {
             return node_map->count(value);
         }
 
@@ -126,7 +111,7 @@ namespace scnu
          * @param value
          * @return
          */
-        shared_ptr<extend_node<key_type,value_type>> find(value_type value)
+        shared_ptr<extend_node<key_type,value_type>> find(const value_type& value)
         {
             return node_map->count(value) ? node_map->at(value):shared_ptr<extend_node<key_type, value_type>>();
         }
@@ -136,7 +121,7 @@ namespace scnu
          * @param value
          * @return
          */
-        std::optional<key_type> find_key(value_type value)
+        std::optional<key_type> find_key(const value_type& value)
         {
             if(node_map->count(value))
             {
@@ -199,8 +184,6 @@ namespace scnu
                      * @brief ensure the new key is ordered
                      */
                     auto next_node = pivot_node->get_next();
-                    auto key = (pivot_node->get_key() + next_node->get_key()) / 2;
-                    node->set_key(key);
 
                     pivot_node->set_next(node);
                     node->set_prior(pivot_node);
@@ -222,16 +205,16 @@ namespace scnu
             if(!pivot_node)
             {
                 /**
-                  * @brief the pivot node does count
+                  * @brief the pivot node does exist
                   */
-                head= node;
+                head = node;
                 rear = node;
                 node->set_key(0);
             } else
             {
 
                 /**
-                 * @brief the prior node does not count
+                 * @brief the prior node does not exist
                  */
                 if(pivot_node == head)
                 {
@@ -249,8 +232,6 @@ namespace scnu
                      * @brief ensure key is ordered
                      */
                     auto prior_node = pivot_node->get_prior();
-                    double key = (prior_node->get_key() + pivot_node->get_key()) / 2;
-                    node->set_key(key);
 
                     node->set_next(pivot_node);
                     node->set_prior(prior_node);
@@ -266,7 +247,7 @@ namespace scnu
          * @param value
          * @return
          */
-        shared_ptr<extend_node<key_type,value_type>> left_insert(value_type value) {
+        shared_ptr<extend_node<key_type,value_type>> left_insert(const value_type& value) {
             /**
             * @brief two cases: (1) the head of this list does not count
              * (2) the head of this list exists
@@ -350,7 +331,7 @@ namespace scnu
          * @param value
          * @return
          */
-        shared_ptr<extend_node<key_type,value_type>> push_back(value_type value) {
+        shared_ptr<extend_node<key_type,value_type>> push_back(const value_type& value) {
             /**
             * @brief two cases: (1) the rear of this list does not count
             * (2) the rear of this list exists
@@ -375,13 +356,14 @@ namespace scnu
          * @param value
          * @return
          */
-        shared_ptr<extend_node<key_type,value_type>> remove(value_type value) {
+        shared_ptr<extend_node<key_type,value_type>> remove(const value_type& value) {
             auto node = node_map->at(value);
             if (head == rear) {
                 /**
                  * @brief this list only contains one node
                  */
                 head.reset();
+                rear.reset();
             } else {
                 if (node == head) {
                     /**
@@ -427,6 +409,25 @@ namespace scnu
          */
         void set_rear(const shared_ptr<extend_node<key_type,value_type>>& node) {
             rear = node;
+        }
+
+        void reset_left_order(const shared_ptr<extend_node<key_type,value_type>>& node){
+            for(auto p = node; p ; p = p->get_prior()){
+                p->set_key(p->get_next()->get_key() - 1);
+            }
+        }
+
+        void reset_right_order(const shared_ptr<extend_node<key_type,value_type>>& node){
+            for(auto p = node; p ; p = p->get_next()){
+                p->set_key(p->get_prior()->get_key() + 1);
+            }
+        }
+
+        void reset_order(){
+            if(head){
+                head->set_key(0);
+                reset_right_order(head->get_next());
+            }
         }
 
     private:
