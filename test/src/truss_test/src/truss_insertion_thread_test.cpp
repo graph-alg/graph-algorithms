@@ -156,7 +156,7 @@ int main(int argc, char **argv) {
 //            std::cout << e->get_source_vertex_id() << "," << e->get_destination_vertex_id() << '\n';
 //        }
     }
-    uint32_t m = 1000000;
+    uint32_t m = 100000;
 
     auto insertion_edge_vector = make_shared<vector<shared_ptr<abstract_edge>>>();
     auto G = load_graph(path, input_file_name, thread_number, m, insertion_edge_vector);
@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
     }
 
 
-    vector<uint32_t> t_array{1, 2, 4, 8, 14};
+    vector<uint32_t> t_array{1, 2, 4, 6, 10, 14};
     for (const auto &t: t_array) {
 
         LOG(logger, LOG_RANK::INFO) << input_file_name << "," << t << "\n";

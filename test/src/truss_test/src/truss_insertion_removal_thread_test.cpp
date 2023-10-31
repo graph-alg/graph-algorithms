@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
 //        }
     }
 
-    uint32_t const m = 500000;
+    uint32_t const m = 50000;
 
     auto insertion_edge_vector = make_shared<vector<shared_ptr<abstract_edge>>>();
     auto removal_edge_vector = make_shared<vector<shared_ptr<abstract_edge>>>();
@@ -190,24 +190,23 @@ int main(int argc, char **argv) {
     }
 
 
-
     auto order_edge_truss_map = container_copy::to_unordered_map<shared_ptr<abstract_edge>, uint32_t>(
             previous_edge_truss_map);
     double order_maintenance_time = order_maintenance(G, insertion_edge_vector, removal_edge_vector, order_edge_truss_map, previous_edge_truss_support_map,
                                                       previous_truss_order_map, previous_rem);
 
-    vector<uint32_t> t_array{1, 2, 4, 8, 14};
+    vector<uint32_t> t_array{1, 2, 4, 6, 10, 14};
 
     for(const auto &t:t_array) {
         LOG(logger, LOG_RANK::INFO) << input_file_name << "," << t << "\n";
 
-        auto contrast_edge_truss_map = make_shared<unordered_map<shared_ptr<abstract_edge>, uint32_t>>();
-        {
-            auto decomposition_time = decompose(G, insertion_edge_vector, removal_edge_vector, contrast_edge_truss_map,
-                                                t);
-
-            LOG(logger, LOG_RANK::INFO) << "Decomposition," << decomposition_time << "\n";
-        }
+//        auto contrast_edge_truss_map = make_shared<unordered_map<shared_ptr<abstract_edge>, uint32_t>>();
+//        {
+//            auto decomposition_time = decompose(G, insertion_edge_vector, removal_edge_vector, contrast_edge_truss_map,
+//                                                t);
+//
+//            LOG(logger, LOG_RANK::INFO) << "Decomposition," << decomposition_time << "\n";
+//        }
 
         LOG(logger, LOG_RANK::INFO) << "Order Maintenance," << order_maintenance_time << "\n";
 
@@ -218,7 +217,7 @@ int main(int argc, char **argv) {
                                                           parallel_edge_truss_map, previous_edge_truss_support_map,
                                                           previous_truss_order_map, previous_rem, t);
 
-            if (truss_compare::same_associative_map(parallel_edge_truss_map, contrast_edge_truss_map)) {
+            if (truss_compare::same_associative_map(parallel_edge_truss_map, order_edge_truss_map)) {
                 LOG(logger, LOG_RANK::INFO) << "Parallel Maintenance," << maintenance_time << "\n";
             }
         }
