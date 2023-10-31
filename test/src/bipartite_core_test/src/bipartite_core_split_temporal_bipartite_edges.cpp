@@ -2,12 +2,14 @@
 #include "bipartite_core_test/bipartite_core_test.h"
 
 int main(int argc, char **argv) {
-    if(argc < 3){
-        std::cout<<"Usage: input path, and thread number!";
+    if (argc < 3) {
+        std::cout << "Usage: input path, and thread number!";
     }
 
     const string input_path = argv[1];
-    const uint32_t thread_number = std::stoul(argv[2]);
+    const double rate = std::stod(argv[2]);
+    const uint32_t thread_number = std::stoul(argv[3]);
+
 
     auto rd = make_shared<random_device>();
     auto directory = path(input_path);
@@ -21,22 +23,24 @@ int main(int argc, char **argv) {
             auto input_file_name = file.filename().string();
             auto edge_vector = abstract_bipartite_graph_io::get_edge_vector(input_path, input_file_name);
 
-            auto half_size = uint32_t (std::ceil(edge_vector->size() / 2));
-            auto half_begin = edge_vector->begin();
-            std::advance(half_begin, half_size);
+            auto size = uint32_t(std::ceil(edge_vector->size() * rate));
 
             {
-                auto sub_edge_vector1 = make_shared<vector<shared_ptr<abstract_bipartite_edge>>>();
-                copy(edge_vector->begin(), half_begin, inserter(*sub_edge_vector1, sub_edge_vector1->end()));
+                auto sub_edge_vector = make_shared<vector<shared_ptr<abstract_bipartite_edge>>>(size);
 
-                abstract_bipartite_graph_io::output_csv_file(sub_edge_vector1, input_path + input_file_name+"-half1");
+                for (uint32_t i = 0; i < size; ++i) {
+                    sub_edge_vector->at(i) = edge_vector->at(i);
+                }
+
+                abstract_bipartite_graph_io::output_csv_file(sub_edge_vector, input_path + input_file_name + "-head");
             }
 
             {
-                auto sub_edge_vector2 = make_shared<vector<shared_ptr<abstract_bipartite_edge>>>();
-                copy(half_begin, edge_vector->end(), inserter(*sub_edge_vector2, sub_edge_vector2->end()));
-
-                abstract_bipartite_graph_io::output_csv_file(sub_edge_vector2, input_path + input_file_name+"-half2");
+                auto sub_edge_vector = make_shared<vector<shared_ptr<abstract_bipartite_edge>>>(size);
+                for (uint32_t i = edge_vector->size() - size; i < edge_vector->size(); ++i) {
+                    sub_edge_vector->at(i - edge_vector->size() + size) = edge_vector->at(i);
+                }
+                abstract_bipartite_graph_io::output_csv_file(sub_edge_vector, input_path + input_file_name + "-rear");
             }
         });
     }

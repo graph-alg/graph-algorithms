@@ -173,24 +173,27 @@ int main(int argc, char **argv) {
         LOG(logger, LOG_RANK::INFO) << input_file_name << "," << m << "\n";
 
         auto insertion_edge_vector = make_shared<vector<shared_ptr<abstract_edge>>>(m);
-        for(uint32_t i = 0; i < m; ++i){
+        for (uint32_t i = 0; i < m; ++i) {
             insertion_edge_vector->at(i) = total_insertion_edge_vector->at(i);
         }
 
-//        auto contrast_edge_truss_map = make_shared<unordered_map<shared_ptr<abstract_edge>, uint32_t>>();
-//        {
-//            auto decomposition_time = decompose(G,insertion_edge_vector, contrast_edge_truss_map, thread_number);
-//            LOG(logger, LOG_RANK::INFO) << "Decomposition," << decomposition_time << "\n";
-//        }
-
-        auto order_edge_truss_map = container_copy::to_unordered_map<shared_ptr<abstract_edge>, uint32_t>(
-                previous_edge_truss_map);
+        auto contrast_edge_truss_map = make_shared<unordered_map<shared_ptr<abstract_edge>, uint32_t>>();
         {
+            auto decomposition_time = decompose(G, insertion_edge_vector, contrast_edge_truss_map, thread_number);
+            LOG(logger, LOG_RANK::INFO) << "Decomposition," << decomposition_time << "\n";
+        }
+
+        {
+            auto order_edge_truss_map = container_copy::to_unordered_map<shared_ptr<abstract_edge>, uint32_t>(
+                    previous_edge_truss_map);
+
             auto maintenance_time = order_maintenance(G, insertion_edge_vector, order_edge_truss_map,
-                                                      previous_edge_truss_support_map, previous_truss_order_map, previous_rem);
+                                                      previous_edge_truss_support_map, previous_truss_order_map,
+                                                      previous_rem);
 
-            LOG(logger, LOG_RANK::INFO) << "Order Insertion," << maintenance_time << "\n";
-
+            if (truss_compare::same_associative_map(order_edge_truss_map, contrast_edge_truss_map)) {
+                LOG(logger, LOG_RANK::INFO) << "Order Insertion," << maintenance_time << "\n";
+            }
         }
 
         {
@@ -200,7 +203,7 @@ int main(int argc, char **argv) {
                                                                 previous_edge_truss_support_map, previous_truss_order_map,
                                                                 previous_rem, thread_number);
 
-            if (truss_compare::same_associative_map(order_edge_truss_map, parallel_edge_truss_map)) {
+            if (truss_compare::same_associative_map(parallel_edge_truss_map, contrast_edge_truss_map)) {
                 LOG(logger, LOG_RANK::INFO) << "Parallel Insertion," << maintenance_time << "\n";
             }
         }

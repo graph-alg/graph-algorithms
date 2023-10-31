@@ -12,19 +12,26 @@
 
 namespace scnu
 {
-    class abstract_bipartite_graph_io
-    {
+    class abstract_bipartite_graph_io {
     public:
         static shared_ptr<vector<shared_ptr<abstract_bipartite_edge>>> get_edge_vector(const string &path,
-                                                                        const string &file_name);
+                                                                                       const string &file_name);
 
-        static shared_ptr<abstract_bipartite_graph> load_graph(const shared_ptr<vector<shared_ptr<abstract_bipartite_edge>>>& edge_vector);
+        static shared_ptr<abstract_bipartite_graph>
+        load_graph(const shared_ptr<vector<shared_ptr<abstract_bipartite_edge>>> &edge_vector);
 
-        static shared_ptr<abstract_bipartite_graph> load_graph(const shared_ptr<vector<shared_ptr<abstract_bipartite_edge>>> &edge_vector,
-                                                               const shared_ptr<thread_pool>& pool);
+        static shared_ptr<abstract_bipartite_graph>
+        load_graph(const shared_ptr<vector<shared_ptr<abstract_bipartite_edge>>> &edge_vector,
+                   const shared_ptr<thread_pool> &pool);
+
+
+        static shared_ptr<abstract_bipartite_graph>
+        load_graph(const shared_ptr<vector<shared_ptr<abstract_bipartite_edge>>> &edge_vector,
+                   uint32_t size,
+                   const shared_ptr<thread_pool> &pool);
 
         static void store_graph(const string &input_path, const string &output_path,
-                                const shared_ptr<thread_pool>& pool);
+                                const shared_ptr<thread_pool> &pool);
 
 
         /**

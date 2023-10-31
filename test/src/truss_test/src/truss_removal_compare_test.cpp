@@ -179,27 +179,34 @@ int main(int argc, char **argv) {
             removal_edge_vector->at(i) = total_removal_edge_vector->at(i);
         }
 
-//        auto contrast_edge_truss_map = make_shared<unordered_map<shared_ptr<abstract_edge>, uint32_t>>();
-//        {
-//            auto decomposition_time = decompose(G, removal_edge_vector, contrast_edge_truss_map, thread_number);
-//            LOG(logger, LOG_RANK::INFO) << "Decomposition," << decomposition_time << "\n";
-//        }
-
-        auto order_edge_truss_map = container_copy::to_unordered_map<shared_ptr<abstract_edge>, uint32_t>(
-                previous_edge_truss_map);
+        auto contrast_edge_truss_map = make_shared<unordered_map<shared_ptr<abstract_edge>, uint32_t>>();
         {
-            auto maintenance_time = order_maintenance(G, removal_edge_vector, order_edge_truss_map, previous_edge_truss_support_map, previous_truss_order_map, previous_rem);
+            auto decomposition_time = decompose(G, removal_edge_vector, contrast_edge_truss_map, thread_number);
+            LOG(logger, LOG_RANK::INFO) << "Decomposition," << decomposition_time << "\n";
+        }
 
-            LOG(logger, LOG_RANK::INFO) << "Order Removal," << maintenance_time << "\n";
 
+        {
+            auto order_edge_truss_map = container_copy::to_unordered_map<shared_ptr<abstract_edge>, uint32_t>(
+                    previous_edge_truss_map);
+
+            auto maintenance_time = order_maintenance(G, removal_edge_vector, order_edge_truss_map,
+                                                      previous_edge_truss_support_map, previous_truss_order_map,
+                                                      previous_rem);
+
+            if (truss_compare::same_associative_map(order_edge_truss_map, contrast_edge_truss_map)) {
+                LOG(logger, LOG_RANK::INFO) << "Order Removal," << maintenance_time << "\n";
+            }
         }
 
         {
-            auto jes_edge_truss_map = container_copy::to_unordered_map<shared_ptr<abstract_edge>, uint32_t>(
+            auto parallel_edge_truss_map = container_copy::to_unordered_map<shared_ptr<abstract_edge>, uint32_t>(
                     previous_edge_truss_map);
-            auto maintenance_time = jes_order_maintenance(G, removal_edge_vector, jes_edge_truss_map, previous_edge_truss_support_map, previous_truss_order_map, previous_rem, thread_number);
+            auto maintenance_time = jes_order_maintenance(G, removal_edge_vector, parallel_edge_truss_map,
+                                                          previous_edge_truss_support_map, previous_truss_order_map,
+                                                          previous_rem, thread_number);
 
-            if (truss_compare::same_associative_map(jes_edge_truss_map, jes_edge_truss_map)) {
+            if (truss_compare::same_associative_map(parallel_edge_truss_map, contrast_edge_truss_map)) {
                 LOG(logger, LOG_RANK::INFO) << "Parallel Removal," << maintenance_time << "\n";
             }
         }

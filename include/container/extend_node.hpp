@@ -135,7 +135,7 @@ namespace scnu
     template <typename key_type, typename value_type>
     struct extend_node_compare
     {
-        bool operator()(const shared_ptr<scnu::extend_node<key_type, value_type>> node1,
+        bool operator()(const shared_ptr<scnu::extend_node<key_type, value_type>>& node1,
                         const shared_ptr<scnu::extend_node<key_type, value_type>>& node2) const
         {
             return node1->get_key() < node2->get_key();

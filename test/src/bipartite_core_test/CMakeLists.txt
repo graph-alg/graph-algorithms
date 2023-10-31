@@ -4,7 +4,7 @@ include_directories(${HOME_DIR}/include ${HOME_DIR}/test/include)
 
 link_directories(${HOME_DIR}/lib /usr/lib64)
 
-link_libraries(time bipartite_core graph io logger string random pthread thread stdc++fs)
+link_libraries(time bipartite_core graph io logger string random pthread thread stdc++fs system)
 
 add_executable(bipartite_core_decomposition_test src/bipartite_core_decomposition_test.cpp)
 
@@ -33,4 +33,5 @@ add_executable(bipartite_core_removal_thread_test src/bipartite_core_removal_thr
 add_executable(bipartite_core_insertion_removal_thread_test src/bipartite_core_insertion_removal_thread_test.cpp)
 
 add_executable(bipartite_core_shuffle_non_temporal_bipartite_edges src/bipartite_core_shuffle_non_temporal_bipartite_edges.cpp)
+
 add_executable(bipartite_core_split_temporal_bipartite_edges src/bipartite_core_split_temporal_bipartite_edges.cpp)

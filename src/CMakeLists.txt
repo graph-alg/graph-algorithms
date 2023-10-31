@@ -1,5 +1,7 @@
 project(src)
 
+add_subdirectory(gadget)
+add_subdirectory(bipartite_core)
 add_subdirectory(graph)
 add_subdirectory(logger)
 add_subdirectory(io)

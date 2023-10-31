@@ -21,35 +21,55 @@ int main(int argc, char **argv){
 
     LOG(logger, LOG_RANK::INFO) << input_file_name << "\n";
 
-    auto edge_vector = abstract_bipartite_graph_io::get_edge_vector(path, input_file_name);
-//    {
-//        auto rd = make_shared<random_device>();
-//        shuffle(edge_vector->begin(), edge_vector->end(), *random_generator::get_default_engine(rd));
-//        for(const auto &e:*edge_vector){
-//            printf("%u,%u\n", e->get_left_vertex_id(), e->get_right_vertex_id());
-//        }
-//    }
-
     uint32_t m = 250;
-    auto previous_edge_vector = make_shared<vector<shared_ptr<abstract_bipartite_edge>>>();
-    auto insertion_edge_vector = make_shared<vector<shared_ptr<abstract_bipartite_edge>>>();
-    auto removal_edge_vector = make_shared<vector<shared_ptr<abstract_bipartite_edge>>>();
-
-    for (uint32_t i = 0; i < edge_vector->size(); i++) {
-        if(i < m){
-            removal_edge_vector->push_back(edge_vector->at(i));
-        }
-        if (i < uint32_t(edge_vector->size()) - m) {
-            previous_edge_vector->push_back(edge_vector->at(i));
-        } else {
-            insertion_edge_vector->push_back(edge_vector->at(i));
-        }
-    }
 
     auto B = shared_ptr<abstract_bipartite_graph>();
+
+    auto insertion_edge_vector = make_shared<vector<shared_ptr<abstract_bipartite_edge>>>(m);
+    auto removal_edge_vector = make_shared<vector<shared_ptr<abstract_bipartite_edge>>>(m);
+    {
+        auto edge_vector = abstract_bipartite_graph_io::get_edge_vector(path, input_file_name);
+        //    {
+//                auto rd = make_shared<random_device>();
+//                shuffle(edge_vector->begin(), edge_vector->end(), *random_generator::get_default_engine(rd));
+//                for(const auto &e:*edge_vector){
+//                    printf("%u,%u\n", e->get_left_vertex_id(), e->get_right_vertex_id());
+//                }
+        //    }
+        for (uint32_t i = 0; i < m; i++) {
+            removal_edge_vector->at(i) = edge_vector->at(i);
+        }
+
+        for (uint32_t i = edge_vector->size() - m; i < edge_vector->size(); i++) {
+            insertion_edge_vector->at(i + m - edge_vector->size()) = edge_vector->at(i);
+        }
+
+        auto pool = make_shared<thread_pool>(thread_number);
+        B = abstract_bipartite_graph_io::load_graph(edge_vector, edge_vector->size() - m, pool);
+    }
+
+    auto previous_left_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_left_store_index>>>();
+    auto previous_right_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_right_store_index>>>();
+    auto previous_delta = make_shared<uint32_t>(0);
+
+    auto previous_core_order_index = make_shared<bipartite_core_order_index>();
+    auto previous_core_rem_degree_index = make_shared<bipartite_core_rem_degree_index>();
+    auto previous_core_degree_index = make_shared<bipartite_core_degree_index>();
     {
         auto pool = make_shared<thread_pool>(thread_number);
-        B = abstract_bipartite_graph_io::load_graph(previous_edge_vector, pool);
+
+        auto left_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+        auto right_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+
+        branch_bipartite_core_decomposition::init(B, left_mutex_map, right_mutex_map,
+                                                  previous_left_index_map, previous_right_index_map, pool);
+        *previous_delta = branch_bipartite_core_decomposition::decompose(B, left_mutex_map, right_mutex_map,
+                                                                         previous_left_index_map,
+                                                                         previous_right_index_map,
+                                                                         previous_core_order_index,
+                                                                         previous_core_rem_degree_index,
+                                                                         previous_core_degree_index,
+                                                                         pool);
     }
 
     /**
@@ -65,27 +85,24 @@ int main(int argc, char **argv){
         simple_timer decomposition_timer;
         {
             auto pool = make_shared<thread_pool>(thread_number);
-            share_bipartite_core_decomposition::decompose(B, contrastive_left_index_map,
+            auto left_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+            auto right_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+            share_bipartite_core_decomposition::init(B, left_mutex_map, right_mutex_map,
+                                                     contrastive_left_index_map, contrastive_right_index_map, pool);
+            share_bipartite_core_decomposition::decompose(B, left_mutex_map, right_mutex_map,
+                                                          contrastive_left_index_map,
                                                           contrastive_right_index_map, pool);
         }
 
         double decomposition_time = decomposition_timer.get_elapse_second();
 
-        LOG(logger, LOG_RANK::INFO) << "Decomposition," << decomposition_time << "\n";
+        LOG(logger, LOG_RANK::INFO) << "Decomposition," << decomposition_time <<"," << double(process_information::get_memory(getpid())) / 1024 / 1024<< "\n";
 
         B->remove_edge_collection(insertion_edge_vector);
         B->insert_edge_collection(removal_edge_vector);
     }
 
-    auto previous_left_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_left_store_index>>>();
-    auto previous_right_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_right_store_index>>>();
-    auto previous_delta = make_shared<uint32_t>(0);
-    {
-        auto pool = make_shared<thread_pool>(thread_number);
-        *previous_delta = branch_bipartite_core_decomposition::decompose(B, previous_left_index_map,
-                                                                         previous_right_index_map,
-                                                                         pool);
-    }
+
 
     /**
      * @brief edge insert
@@ -110,19 +127,27 @@ int main(int argc, char **argv){
 
             auto pool = make_shared<thread_pool>(thread_number);
 
-            edge_bipartite_core_maintenance::init(B, new_left_index_map, new_right_index_map, pool);
-            for(const auto &e:*insertion_edge_vector){
-                edge_bipartite_core_maintenance::insert(B, e, edge_left_index_map, edge_right_index_map, new_left_index_map, new_right_index_map, delta, pool);
+            auto left_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+            auto right_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+
+            edge_bipartite_core_maintenance::init(B, left_mutex_map, right_mutex_map, new_left_index_map,
+                                                  new_right_index_map, pool);
+            for (const auto &e: *insertion_edge_vector) {
+                edge_bipartite_core_maintenance::insert(B, left_mutex_map, right_mutex_map, e, edge_left_index_map,
+                                                        edge_right_index_map,
+                                                        new_left_index_map, new_right_index_map, delta, pool);
             }
-            for(const auto &e:*removal_edge_vector){
-                edge_bipartite_core_maintenance::remove(B, e, edge_left_index_map,  edge_right_index_map, new_left_index_map, new_right_index_map, delta, pool);
+            for (const auto &e: *removal_edge_vector) {
+                edge_bipartite_core_maintenance::remove(B, left_mutex_map, right_mutex_map, e, edge_left_index_map,
+                                                        edge_right_index_map,
+                                                        new_left_index_map, new_right_index_map, delta, pool);
             }
         }
         double maintenance_time = maintenance_timer.get_elapse_second();
 
         if (bipartite_core_compare::same(edge_left_index_map, edge_right_index_map,
                                          contrastive_left_index_map, contrastive_right_index_map)) {
-            LOG(logger, LOG_RANK::INFO) << "Edge Maintenance," << maintenance_time << "\n";
+            LOG(logger, LOG_RANK::INFO) << "Edge Maintenance," << maintenance_time <<"," << double(process_information::get_memory(getpid())) / 1024 / 1024 << "\n";
         }
 
         B->remove_edge_collection(insertion_edge_vector);
@@ -130,18 +155,20 @@ int main(int argc, char **argv){
     }
 
     {
-        auto edge_left_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_left_store_index>>>();
-        auto edge_right_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_right_store_index>>>();
+        auto batch_left_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_left_store_index>>>();
+        auto batch_right_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_right_store_index>>>();
 
-        auto inserted_edge_set = container_copy::to_unordered_set<shared_ptr<abstract_bipartite_edge>>(insertion_edge_vector);
-        auto removed_edge_set = container_copy::to_unordered_set<shared_ptr<abstract_bipartite_edge>>(removal_edge_vector);
+        auto inserted_edge_set = container_copy::to_unordered_set<shared_ptr<abstract_bipartite_edge>>(
+                insertion_edge_vector);
+        auto removed_edge_set = container_copy::to_unordered_set<shared_ptr<abstract_bipartite_edge>>(
+                removal_edge_vector);
 
         for (const auto &[l, l_node]: *previous_left_index_map) {
-            edge_left_index_map->insert({l, make_shared<bipartite_core_left_store_index>(l_node)});
+            batch_left_index_map->insert({l, make_shared<bipartite_core_left_store_index>(l_node)});
         }
 
         for (const auto &[r, r_node]: *previous_right_index_map) {
-            edge_right_index_map->insert({r, make_shared<bipartite_core_right_store_index>(r_node)});
+            batch_right_index_map->insert({r, make_shared<bipartite_core_right_store_index>(r_node)});
         }
         auto delta = make_shared<uint32_t>(*previous_delta);
 
@@ -150,17 +177,30 @@ int main(int argc, char **argv){
             auto new_left_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_left_store_index>>>();
             auto new_right_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_right_store_index>>>();
 
+
+            auto left_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+            auto right_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+
             auto pool = make_shared<thread_pool>(thread_number);
 
-            edge_bipartite_core_maintenance::init(B, new_left_index_map, new_right_index_map, pool);
-            edge_bipartite_core_maintenance::batch_insert(B, inserted_edge_set, edge_left_index_map,  edge_right_index_map, new_left_index_map, new_right_index_map, delta, pool);
-            edge_bipartite_core_maintenance::batch_remove(B, removed_edge_set, edge_left_index_map, edge_right_index_map, new_left_index_map, new_right_index_map, delta, pool);
+            edge_bipartite_core_maintenance::init(B, left_mutex_map, right_mutex_map, new_left_index_map,
+                                                  new_right_index_map, pool);
+            edge_bipartite_core_maintenance::batch_insert(B, left_mutex_map, right_mutex_map, inserted_edge_set,
+                                                          batch_left_index_map,
+                                                          batch_right_index_map, new_left_index_map,
+                                                          new_right_index_map,
+                                                          delta, pool);
+            edge_bipartite_core_maintenance::batch_remove(B, left_mutex_map, right_mutex_map, removed_edge_set,
+                                                          batch_left_index_map,
+                                                          batch_right_index_map, new_left_index_map,
+                                                          new_right_index_map,
+                                                          delta, pool);
         }
         double maintenance_time = maintenance_timer.get_elapse_second();
 
-        if (bipartite_core_compare::same(edge_left_index_map, edge_right_index_map,
+        if (bipartite_core_compare::same(batch_left_index_map, batch_right_index_map,
                                          contrastive_left_index_map, contrastive_right_index_map)) {
-            LOG(logger, LOG_RANK::INFO) << "Batch Maintenance," << maintenance_time << "\n";
+            LOG(logger, LOG_RANK::INFO) << "Batch Maintenance," << maintenance_time <<"," << double(process_information::get_memory(getpid())) / 1024 / 1024<< "\n";
         }
 
         B->remove_edge_collection(insertion_edge_vector);
@@ -200,89 +240,75 @@ int main(int argc, char **argv){
 
         auto maintenance_time = maintenance_timer.get_elapse_second();
 
-        if (bipartite_core_compare::same(quasi_left_vertex_map, quasi_right_vertex_map, contrastive_left_index_map,contrastive_right_index_map)) {
-            LOG(logger, LOG_RANK::INFO) << "Quasi Maintenance," << maintenance_time << "\n";
+        if (bipartite_core_compare::same(quasi_left_vertex_map, quasi_right_vertex_map, contrastive_left_index_map,
+                                         contrastive_right_index_map)) {
+            LOG(logger, LOG_RANK::INFO) << "Quasi Maintenance,"<< maintenance_time  <<"," << double(process_information::get_memory(getpid())) / 1024 / 1024 << "\n";
         }
 
         B->remove_edge_collection(insertion_edge_vector);
         B->insert_edge_collection(removal_edge_vector);
     }
 
-    /**
-     * @brief branch maintenance
-     */
-    {
-        auto branch_left_vertex_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_left_store_index>>>();
-        auto branch_right_vertex_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_right_store_index>>>();
-
-        for (const auto &[l, l_node]: *previous_left_index_map) {
-            branch_left_vertex_map->insert({l, make_shared<bipartite_core_left_store_index>(l_node)});
-        }
-        for (const auto &[r, r_node]: *previous_right_index_map) {
-            branch_right_vertex_map->insert({r, make_shared<bipartite_core_right_store_index>(r_node)});
-        }
-
-        auto inserted_edge_set = container_copy::to_unordered_set<shared_ptr<abstract_bipartite_edge>>(insertion_edge_vector);
-        auto removed_edge_set = container_copy::to_unordered_set<shared_ptr<abstract_bipartite_edge>>(removal_edge_vector);
-
-        simple_timer maintenance_timer;
+        /**
+         * @brief branch maintenance
+         */
         {
-            auto new_left_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_left_store_index>>>();
-            auto new_right_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_right_store_index>>>();
+            auto branch_left_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_left_store_index>>>();
+            auto branch_right_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_right_store_index>>>();
 
-            auto pool = make_shared<thread_pool>(thread_number);
+            for (const auto &[l, l_node]: *previous_left_index_map) {
+                branch_left_index_map->insert({l, make_shared<bipartite_core_left_store_index>(l_node)});
+            }
+            for (const auto &[r, r_node]: *previous_right_index_map) {
+                branch_right_index_map->insert({r, make_shared<bipartite_core_right_store_index>(r_node)});
+            }
 
-            branch_bipartite_core_maintenance::init(B, new_left_index_map, new_right_index_map);
-            branch_bipartite_core_maintenance::insert(B, inserted_edge_set, branch_left_vertex_map,branch_right_vertex_map, new_left_index_map, new_right_index_map, pool);
-            branch_bipartite_core_maintenance::remove(B, removed_edge_set, branch_left_vertex_map,branch_right_vertex_map, new_left_index_map, new_right_index_map, pool);
+            auto inserted_edge_set = container_copy::to_unordered_set<shared_ptr<abstract_bipartite_edge>>(insertion_edge_vector);
+            auto removed_edge_set = container_copy::to_unordered_set<shared_ptr<abstract_bipartite_edge>>(removal_edge_vector);
+
+            auto branch_core_order_index = make_shared<bipartite_core_order_index>(previous_core_order_index);
+            auto branch_core_rem_degree_index = make_shared<bipartite_core_rem_degree_index>(
+                    previous_core_rem_degree_index);
+            auto branch_core_degree_index = make_shared<bipartite_core_degree_index>(previous_core_degree_index);
+
+            simple_timer maintenance_timer;
+            {
+                auto new_left_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_left_store_index>>>();
+                auto new_right_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_right_store_index>>>();
+
+                auto pool = make_shared<thread_pool>(thread_number);
+
+                auto left_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+                auto right_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+
+                branch_bipartite_core_maintenance::init(B, left_mutex_map, right_mutex_map, new_left_index_map,
+                                                        new_right_index_map, pool);
+
+                branch_bipartite_core_maintenance::insert(B, left_mutex_map, right_mutex_map, inserted_edge_set,
+                                                          branch_left_index_map, branch_right_index_map,
+                                                          new_left_index_map, new_right_index_map,
+                                                          branch_core_order_index, branch_core_rem_degree_index,
+                                                          branch_core_degree_index,
+                                                          pool);
+
+                branch_bipartite_core_maintenance::remove(B, left_mutex_map, right_mutex_map, removed_edge_set,
+                                                          branch_left_index_map, branch_right_index_map,
+                                                          new_left_index_map, new_right_index_map,
+                                                          branch_core_order_index, branch_core_rem_degree_index,
+                                                          branch_core_degree_index,
+                                                          pool);
+
+            }
+            auto maintenance_time = maintenance_timer.get_elapse_second();
+            if (bipartite_core_compare::same(branch_left_index_map, branch_right_index_map, contrastive_left_index_map, contrastive_right_index_map)) {
+                LOG(logger, LOG_RANK::INFO) << "Branch Maintenance," << maintenance_time << ","
+                                            << double(process_information::get_memory(getpid())) / 1024 / 1024 << "\n";
+            }
+
+            B->remove_edge_collection(insertion_edge_vector);
+            B->insert_edge_collection(removal_edge_vector);
         }
-        auto maintenance_time = maintenance_timer.get_elapse_second();
-        if (bipartite_core_compare::same(branch_left_vertex_map, branch_right_vertex_map, contrastive_left_index_map,contrastive_right_index_map)) {
-            LOG(logger, LOG_RANK::INFO) << "Branch Maintenance," << maintenance_time << "\n";
-        }
 
-        B->remove_edge_collection(insertion_edge_vector);
-        B->insert_edge_collection(removal_edge_vector);
-    }
-
-    /**
-     * @brief branch maintenance
-     */
-    {
-        auto branch_left_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_left_store_index>>>();
-        auto branch_right_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_right_store_index>>>();
-
-        for (const auto &[l, l_node]: *previous_left_index_map) {
-            branch_left_index_map->insert({l, make_shared<bipartite_core_left_store_index>(l_node)});
-        }
-        for (const auto &[r, r_node]: *previous_right_index_map) {
-            branch_right_index_map->insert({r, make_shared<bipartite_core_right_store_index>(r_node)});
-        }
-
-        auto inserted_edge_set = container_copy::to_unordered_set<shared_ptr<abstract_bipartite_edge>>(insertion_edge_vector);
-        auto removed_edge_set = container_copy::to_unordered_set<shared_ptr<abstract_bipartite_edge>>(removal_edge_vector);
-
-        simple_timer maintenance_timer;
-        {
-            auto left_core_degree_map = make_shared<unordered_map<uint32_t, shared_ptr<map<uint32_t, shared_ptr<unordered_set<uint32_t>>>>>>();
-            auto right_core_degree_map = make_shared<unordered_map<uint32_t, shared_ptr<map<uint32_t, shared_ptr<unordered_set<uint32_t>>>>>>();
-
-            auto new_left_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_left_store_index>>>();
-            auto new_right_index_map = make_shared<unordered_map<uint32_t, shared_ptr<bipartite_core_right_store_index>>>();
-
-            auto pool = make_shared<thread_pool>(thread_number);
-            branch_bipartite_core_maintenance::init(B, branch_left_index_map, branch_right_index_map, left_core_degree_map, right_core_degree_map, new_left_index_map, new_right_index_map, pool);
-            branch_bipartite_core_maintenance::remove(B, left_core_degree_map, right_core_degree_map, removed_edge_set, branch_left_index_map, branch_right_index_map, new_left_index_map, new_right_index_map, pool);
-            branch_bipartite_core_maintenance::insert(B, left_core_degree_map, right_core_degree_map, inserted_edge_set, branch_left_index_map, branch_right_index_map, new_left_index_map, new_right_index_map, pool);
-        }
-        auto maintenance_time = maintenance_timer.get_elapse_second();
-        if (bipartite_core_compare::same(branch_left_index_map, branch_right_index_map, contrastive_left_index_map, contrastive_right_index_map)) {
-            LOG(logger, LOG_RANK::INFO) << "Branch Maintenance*," << maintenance_time << "\n";
-        }
-
-        B->remove_edge_collection(insertion_edge_vector);
-        B->insert_edge_collection(removal_edge_vector);
-    }
 
     return 0;
 }

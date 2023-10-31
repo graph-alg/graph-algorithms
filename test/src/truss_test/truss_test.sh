@@ -2,7 +2,7 @@
 PATH='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/bin'
 export PATH
 
-thread_number=14
+thread_number=16
 
 small_data1=$HOME'/wbai/unipartite_graph/processed_data/non_temporal_data/small_data/'
 ./truss_shuffle_non_temporal_edges $small_data1 $thread_number

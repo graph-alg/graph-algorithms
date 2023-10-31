@@ -86,6 +86,61 @@ namespace scnu {
         return graph;
     }
 
+    shared_ptr<abstract_bipartite_graph>
+    abstract_bipartite_graph_io::load_graph(const shared_ptr<vector<shared_ptr<abstract_bipartite_edge>>> &edge_vector,
+                                            uint32_t size,
+                                            const shared_ptr<thread_pool> &pool) {
+
+        auto graph = make_shared<abstract_bipartite_graph>();
+        auto left_vertex_map = graph->get_left_vertex_map();
+        auto right_vertex_map = graph->get_right_vertex_map();
+
+        auto left_vertex_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+        auto right_vertex_mutex_map = make_shared<unordered_map<uint32_t, shared_ptr<mutex>>>();
+
+        pool->submit_task([=] {
+            for (uint32_t i = 0; i < size; ++i) {
+                auto edge = edge_vector->at(i);
+                auto l = edge->get_left_vertex_id();
+                if (!left_vertex_map->count(l)) {
+                    left_vertex_map->insert({l, make_shared<abstract_left_vertex>(l)});
+                    left_vertex_mutex_map->insert({l, make_shared<mutex>()});
+                }
+            }
+        });
+        pool->submit_task([=] {
+            for (uint32_t i = 0; i < size; ++i) {
+                auto edge = edge_vector->at(i);
+                auto r = edge->get_right_vertex_id();
+                if (!right_vertex_map->count(r)) {
+                    right_vertex_map->insert({r, make_shared<abstract_right_vertex>(r)});
+                    right_vertex_mutex_map->insert({r, make_shared<mutex>()});
+                }
+            }
+        });
+        pool->barrier();
+
+        for (uint32_t i = 0; i < size; ++i) {
+            auto edge = edge_vector->at(i);
+            pool->submit_task([=] {
+                auto l = edge->get_left_vertex_id();
+                auto r = edge->get_right_vertex_id();
+
+                left_vertex_mutex_map->at(l)->lock();
+                auto l_vertex = graph->get_left_vertex(l);
+                l_vertex->insert_edge(r, edge);
+                left_vertex_mutex_map->at(l)->unlock();
+
+                right_vertex_mutex_map->at(r)->lock();
+                auto r_vertex = graph->get_right_vertex(r);
+                r_vertex->insert_edge(l, edge);
+                right_vertex_mutex_map->at(r)->unlock();
+            });
+        }
+        pool->barrier();
+        return graph;
+    }
+
     /**
     * @details convert original line to csv format
     * @param input_path

@@ -2,6 +2,7 @@ project(test)
 
 add_subdirectory(src/bipartite_graph_process_test)
 add_subdirectory(src/graph_process_test)
+add_subdirectory(src/bipartite_core_test)
 add_subdirectory(src/container_test)
 add_subdirectory(src/logger_test)
 add_subdirectory(src/multiple_core_test)
