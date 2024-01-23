@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
 //        }
     }
 
-    uint32_t const m = 50000;
+    uint32_t const m = 100000;
 
     auto insertion_edge_vector = make_shared<vector<shared_ptr<abstract_edge>>>();
     auto removal_edge_vector = make_shared<vector<shared_ptr<abstract_edge>>>();
@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
     double order_maintenance_time = order_maintenance(G, insertion_edge_vector, removal_edge_vector, order_edge_truss_map, previous_edge_truss_support_map,
                                                       previous_truss_order_map, previous_rem);
 
-    vector<uint32_t> t_array{1, 2, 4, 6, 10, 14};
+    vector<uint32_t> t_array{1, 2, 4, 8, 16};
 
     for(const auto &t:t_array) {
         LOG(logger, LOG_RANK::INFO) << input_file_name << "," << t << "\n";

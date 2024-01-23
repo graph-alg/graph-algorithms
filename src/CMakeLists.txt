@@ -12,7 +12,7 @@ add_subdirectory(time)
 add_subdirectory(system)
 add_subdirectory(thread)
 add_subdirectory(truss)
-
+add_subdirectory(wing)
 
 
 

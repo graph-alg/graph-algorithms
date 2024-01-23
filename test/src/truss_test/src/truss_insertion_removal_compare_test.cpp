@@ -8,16 +8,16 @@ shared_ptr<abstract_graph> load_graph(const string &path,
                                       const shared_ptr<vector<shared_ptr<abstract_edge>>> &total_removal_edge_vector){
     auto edge_vector = abstract_graph_io::get_edge_vector(path, input_file_name);
 
-    for (uint32_t i = 0; i < 50000; ++i) {
+    for (uint32_t i = 0; i < 100000; ++i) {
             total_removal_edge_vector->push_back(edge_vector->at(i));
     }
 
-    for (uint32_t i = edge_vector->size() - 50000; i < edge_vector->size(); ++i) {
+    for (uint32_t i = edge_vector->size() - 100000; i < edge_vector->size(); ++i) {
         total_insertion_edge_vector->push_back(edge_vector->at(i));
     }
 
     auto pool = make_shared<thread_pool>(thread_number);
-    auto G = abstract_graph_io::load_graph(edge_vector, edge_vector->size() - 50000, pool);
+    auto G = abstract_graph_io::load_graph(edge_vector, edge_vector->size() - 100000, pool);
 
     return  G;
 }
@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
         prepare(G, previous_edge_truss_map, previous_edge_truss_support_map, previous_truss_order_map, previous_rem, thread_number);
     }
 
-    vector<uint32_t> m_array{10000, 20000, 30000, 40000, 50000};
+    vector<uint32_t> m_array{20000, 40000, 60000, 80000, 100000};
     for(const auto &m:m_array){
         LOG(logger, LOG_RANK::INFO) << input_file_name << "," << m << "\n";
 
@@ -196,24 +196,24 @@ int main(int argc, char **argv) {
             removal_edge_vector->at(i) = total_removal_edge_vector->at(i);
         }
 
-        auto contrast_edge_truss_map = make_shared<unordered_map<shared_ptr<abstract_edge>, uint32_t>>();
-        {
-            auto decomposition_time = decompose(G, insertion_edge_vector, removal_edge_vector, contrast_edge_truss_map,
-                                                thread_number);
-            LOG(logger, LOG_RANK::INFO) << "Decomposition," << decomposition_time << "\n";
-        }
+//        auto contrast_edge_truss_map = make_shared<unordered_map<shared_ptr<abstract_edge>, uint32_t>>();
+//        {
+//            auto decomposition_time = decompose(G, insertion_edge_vector, removal_edge_vector, contrast_edge_truss_map,
+//                                                thread_number);
+//            LOG(logger, LOG_RANK::INFO) << "Decomposition," << decomposition_time << "\n";
+//        }
 
+        auto order_edge_truss_map = container_copy::to_unordered_map<shared_ptr<abstract_edge>, uint32_t>(
+                previous_edge_truss_map);
         {
-            auto order_edge_truss_map = container_copy::to_unordered_map<shared_ptr<abstract_edge>, uint32_t>(
-                    previous_edge_truss_map);
             auto maintenance_time = order_maintenance(G, insertion_edge_vector, removal_edge_vector,
                                                       order_edge_truss_map,
                                                       previous_edge_truss_support_map, previous_truss_order_map,
                                                       previous_rem);
 
-            if (truss_compare::same_associative_map(order_edge_truss_map, contrast_edge_truss_map)) {
-                LOG(logger, LOG_RANK::INFO) << "Order Maintenance," << maintenance_time << "\n";
-            }
+            //if (truss_compare::same_associative_map(order_edge_truss_map, contrast_edge_truss_map)) {
+            LOG(logger, LOG_RANK::INFO) << "Order Maintenance," << maintenance_time << "\n";
+            //}
         }
 
         {
@@ -223,7 +223,7 @@ int main(int argc, char **argv) {
             auto maintenance_time = jes_order_maintenance(G, insertion_edge_vector, removal_edge_vector, parallel_edge_truss_map,
                                                                 previous_edge_truss_support_map, previous_truss_order_map, previous_rem, thread_number);
 
-            if (truss_compare::same_associative_map(parallel_edge_truss_map, contrast_edge_truss_map)) {
+            if (truss_compare::same_associative_map(parallel_edge_truss_map, order_edge_truss_map)) {
                 LOG(logger, LOG_RANK::INFO) << "Parallel Maintenance," << maintenance_time << "\n";
             }
         }

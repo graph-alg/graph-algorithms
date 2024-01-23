@@ -7,6 +7,8 @@ shared_ptr<abstract_graph> load_graph(const string &path,
                                       uint32_t m,
                                       const shared_ptr<vector<shared_ptr<abstract_edge>>> &insertion_edge_vector){
     auto edge_vector = abstract_graph_io::get_edge_vector(path, input_file_name);
+//    auto rd = make_shared<random_device>();
+//    shuffle(edge_vector->begin(), edge_vector->end(), *random_generator::get_default_engine(rd));
 
     for (uint32_t i = edge_vector->size() - m; i < edge_vector->size(); ++i) {
         insertion_edge_vector->push_back(edge_vector->at(i));
@@ -15,7 +17,7 @@ shared_ptr<abstract_graph> load_graph(const string &path,
     auto pool = make_shared<thread_pool>(thread_number);
     auto G = abstract_graph_io::load_graph(edge_vector, edge_vector->size() - m, pool);
 
-    return  G;
+    return G;
 }
 
 void prepare(const shared_ptr<abstract_graph>&G,
@@ -156,7 +158,7 @@ int main(int argc, char **argv) {
 //            std::cout << e->get_source_vertex_id() << "," << e->get_destination_vertex_id() << '\n';
 //        }
     }
-    uint32_t m = 100000;
+    uint32_t m = 200000;
 
     auto insertion_edge_vector = make_shared<vector<shared_ptr<abstract_edge>>>();
     auto G = load_graph(path, input_file_name, thread_number, m, insertion_edge_vector);
@@ -180,7 +182,7 @@ int main(int argc, char **argv) {
     }
 
 
-    vector<uint32_t> t_array{1, 2, 4, 6, 10, 14};
+    vector<uint32_t> t_array{1, 2, 4, 8, 16};
     for (const auto &t: t_array) {
 
         LOG(logger, LOG_RANK::INFO) << input_file_name << "," << t << "\n";

@@ -159,7 +159,7 @@ int main(int argc, char **argv) {
 //        }
     }
 
-    uint32_t m = 100000;
+    uint32_t m = 200000;
 
     auto removal_edge_vector = make_shared<vector<shared_ptr<abstract_edge>>>();
     auto G = load_graph(path, input_file_name, thread_number, m, removal_edge_vector);
@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
     }
 
 
-    vector<uint32_t> t_array{1, 2, 4, 6, 10, 14};
+    vector<uint32_t> t_array{1, 2, 4, 8, 16};
     for (const auto &t: t_array) {
 
         LOG(logger, LOG_RANK::INFO) << input_file_name << "," << t << "\n";
